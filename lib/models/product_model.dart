@@ -70,3 +70,41 @@ class ProductModel {
     }
   }
 }
+
+/// Model untuk Ulasan (Review) Produk
+class ReviewModel {
+  final String id;
+  final String userName;
+  final double rating;
+  final String comment;
+  final String date;
+
+  ReviewModel({
+    required this.id,
+    required this.userName,
+    required this.rating,
+    required this.comment,
+    required this.date,
+  });
+
+  factory ReviewModel.fromJson(Map<String, dynamic> json) {
+    // Mengekstrak nama dari objek "reviewer" jika ada
+    String parsedUserName = 'Anonymous';
+    if (json['reviewer'] != null && json['reviewer'] is Map) {
+      parsedUserName = json['reviewer']['full_name']?.toString() ?? 
+                       json['reviewer']['name']?.toString() ?? 
+                       'Anonymous';
+    } else if (json['user'] != null && json['user'] is Map) {
+      parsedUserName = json['user']['full_name']?.toString() ?? 'Anonymous';
+    }
+
+    return ReviewModel(
+      id: json['id']?.toString() ?? '',
+      userName: parsedUserName,
+      rating: double.tryParse(json['rating']?.toString() ?? '0') ?? 0.0,
+      comment: json['comment']?.toString() ?? '',
+      // Mencoba mencari tanggal dari created_at
+      date: json['created_at']?.toString() ?? json['date']?.toString() ?? '',
+    );
+  }
+}

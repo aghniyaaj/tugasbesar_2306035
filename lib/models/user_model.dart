@@ -4,6 +4,7 @@ class UserModel {
   final String email;
   final String? phoneNumber;
   final String role;
+  final String? avatarUrl; // TAMBAHAN: Menyimpan URL foto profil
 
   UserModel({
     required this.id,
@@ -11,11 +12,11 @@ class UserModel {
     required this.email,
     this.phoneNumber,
     required this.role,
+    this.avatarUrl,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     try {
-      // PERBAIKAN 1: Ekstrak role jika bentuknya objek Map (seperti di Postman)
       String parsedRole = 'customer';
       if (json['role'] != null) {
         if (json['role'] is Map) {
@@ -27,21 +28,16 @@ class UserModel {
 
       return UserModel(
         id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
-        
-        // PERBAIKAN 2: Menambahkan deteksi kunci "full_name" (Sesuai Postman)
         fullName: json['full_name']?.toString() ?? 
                   json['fullName']?.toString() ?? 
-                  json['name']?.toString() ?? 
-                  'User',
-                  
+                  json['name']?.toString() ?? 'User',
         email: json['email']?.toString() ?? '',
-        
-        // PERBAIKAN 3: Menambahkan deteksi kunci "phone" (Sesuai Postman)
         phoneNumber: json['phone']?.toString() ?? 
                      json['phoneNumber']?.toString() ?? 
                      json['phone_number']?.toString(),
-                     
         role: parsedRole,
+        // MENANGKAP AVATAR DARI API
+        avatarUrl: json['avatar_url']?.toString() ?? json['avatar']?.toString(),
       );
     } catch (e) {
       print("🚨 [ERROR PARSING USER]: $e");
@@ -56,6 +52,7 @@ class UserModel {
       'email': email,
       'phoneNumber': phoneNumber,
       'role': role,
+      'avatarUrl': avatarUrl,
     };
   }
 }

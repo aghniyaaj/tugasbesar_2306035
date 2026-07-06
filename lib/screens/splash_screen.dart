@@ -59,14 +59,14 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Ikon Bunga (Bisa diganti dengan Image.asset jika punya file PNG)
+            // Ikon Bunga 
             const Icon(
               Icons.spa,
               size: 60,
               color: AppColors.primary,
             ),
             const SizedBox(height: 16),
-            // Teks "Bloom" sesuai desain Figma
+            // Teks "Bloom" sesuai nama aplikasi
             const Text(
               'Bloom',
               style: TextStyle(

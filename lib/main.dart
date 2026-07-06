@@ -4,7 +4,8 @@ import 'providers/auth_provider.dart';
 import 'providers/product_provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/order_provider.dart';
-import 'providers/wishlist_provider.dart'; // Import Provider Wishlist
+import 'providers/wishlist_provider.dart'; 
+import 'providers/review_provider.dart';
 import 'screens/splash_screen.dart';
 import 'utils/constants.dart';
 
@@ -23,8 +24,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
         ChangeNotifierProvider(create: (_) => OrderProvider()),
-        // MENDAFTARKAN WISHLIST PROVIDER
         ChangeNotifierProvider(create: (_) => WishlistProvider()), 
+        ChangeNotifierProvider(create: (_) => ReviewProvider()), 
       ],
       child: MaterialApp(
         title: 'Bloom App',

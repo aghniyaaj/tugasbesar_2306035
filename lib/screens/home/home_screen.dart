@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:tugasbesar_2306035/providers/wishlist_provider.dart';
 import '../../utils/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
-import '../../providers/wishlist_provider.dart';
 import '../product/product_detail_screen.dart';
 import '../../widgets/product_card.dart';
 
@@ -41,9 +41,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    // Sekarang error API sudah diobati, namamu pasti akan muncul!
     final userName = authProvider.user?.fullName.split(' ').first ?? 'User';
     final userInitial = userName.isNotEmpty ? userName[0].toUpperCase() : 'U';
+    
+    // TAMBAHAN: Mengecek apakah user memiliki URL Avatar
+    final bool hasAvatar = authProvider.user?.avatarUrl != null && authProvider.user!.avatarUrl!.isNotEmpty;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -74,7 +76,13 @@ class _HomeScreenState extends State<HomeScreen> {
               child: CircleAvatar(
                 backgroundColor: AppColors.primary,
                 radius: 16,
-                child: Text(userInitial, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                // FITUR BARU: Menampilkan gambar dari URL jika ada
+                backgroundImage: hasAvatar ? NetworkImage(authProvider.user!.avatarUrl!) : null,
+                onBackgroundImageError: hasAvatar ? (exception, stackTrace) => {} : null,
+                // Jika tidak ada gambar, tampilkan inisial nama
+                child: !hasAvatar 
+                    ? Text(userInitial, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))
+                    : null,
               ),
             ),
           )

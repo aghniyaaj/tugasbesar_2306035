@@ -73,8 +73,10 @@ class AuthProvider with ChangeNotifier {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        // PERBAIKAN FINAL: Hanya kirim full_name sesuai permintaan mutlak API
+        // Mengirim 'name' dan 'full_name' sekaligus agar
+        // dijamin tembus meskipun API memakai format snake_case!
         body: jsonEncode({
+          'name': name,
           'full_name': name, 
           'email': email, 
           'password': password
@@ -91,13 +93,9 @@ class AuthProvider with ChangeNotifier {
       } else {
         final responseData = jsonDecode(response.body);
         
-        // PERBAIKAN UI/UX: Merapikan pesan error agar tidak berbentuk JSON kasar
+        // Tangkap error spesifik dari array "errors" API 
         String extraError = '';
-        if (responseData['errors'] != null && responseData['errors'] is List) {
-          final List errors = responseData['errors'];
-          // Mengambil kalimat 'message'-nya saja dan menyusunnya ke bawah
-          extraError = '\n' + errors.map((e) => '• ${e['message']}').join('\n');
-        } else if (responseData['errors'] != null) {
+        if (responseData['errors'] != null) {
           extraError = '\nDetail: ${responseData['errors']}';
         }
         
@@ -149,6 +147,50 @@ class AuthProvider with ChangeNotifier {
       }
     } catch (e) {
       print("🚨 [ERROR FETCH PROFILE]: $e");
+    }
+  }
+
+  // --- FITUR BARU: UPDATE PROFIL (PUT) ---
+  Future<bool> updateProfile(String newName, String newPhone, String newAvatar) async {
+    if (_token == null) return false;
+    
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final url = Uri.parse('${ApiConstants.baseUrl}/auth/profile');
+      
+      // Kirim data sesuai format yang diminta API
+      final response = await http.put(
+        url,
+        headers: ApiConstants.getHeaders(_token),
+        body: jsonEncode({
+          'full_name': newName,
+          // Jika HP kosong, kirim null agar tidak error format validasi
+          'phone': newPhone.isEmpty ? null : newPhone,
+          // Jika avatar kosong, kirim null
+          'avatar_url': newAvatar.isEmpty ? null : newAvatar, 
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        // Jika sukses, tarik ulang data profil terbaru dari server
+        await fetchProfile();
+        _isLoading = false;
+        notifyListeners();
+        return true;
+      } else {
+        print("🚨 [ERROR UPDATE PROFILE API]: ${response.body}");
+        _errorMessage = 'Gagal menyimpan. Periksa format nomor telepon.';
+        _isLoading = false;
+        notifyListeners();
+        return false;
+      }
+    } catch (e) {
+      print("🚨 [ERROR JARINGAN UPDATE PROFILE]: $e");
+      _isLoading = false;
+      notifyListeners();
+      return false;
     }
   }
 }
