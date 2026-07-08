@@ -94,7 +94,7 @@ Buka terminal/command prompt dan masuk ke direktori project ini.
 
 Jalankan perintah berikut untuk mengunduh semua paket (dependencies) yang dibutuhkan:
 
-flutter pub get
+```flutter pub get```
 
 
 (Opsional jika menggunakan VS Code) Jika Anda baru saja berpindah dari web (Chrome) ke Emulator/HP, sangat disarankan untuk membersihkan cache terlebih dahulu:
