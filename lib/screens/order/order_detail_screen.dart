@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/order_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/order_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../utils/constants.dart';
 import '../../utils/formatters.dart';
 
@@ -21,7 +22,6 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
   @override
   void initState() {
     super.initState();
-    // Langsung menembak API Detail Pesanan begitu layar dibuka
     final token = Provider.of<AuthProvider>(context, listen: false).token;
     if (token != null) {
       _orderDetailsFuture = Provider.of<OrderProvider>(context, listen: false)
@@ -42,16 +42,22 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // DETEKSI TEMA
+    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+    final textColor = isDark ? Colors.white : AppColors.textDark;
+    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final dividerColor = isDark ? Colors.grey.shade800 : Colors.grey.shade200;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textDark),
+          icon: Icon(Icons.arrow_back, color: textColor),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Order Detail', style: TextStyle(color: AppColors.textDark, fontFamily: 'Serif')),
+        title: Text('Order Detail', style: TextStyle(color: textColor, fontFamily: 'Serif')),
         centerTitle: true,
       ),
       body: FutureBuilder<OrderModel?>(
@@ -60,7 +66,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator(color: AppColors.primary));
           } else if (snapshot.hasError || !snapshot.hasData || snapshot.data == null) {
-            return const Center(child: Text('Gagal memuat detail pesanan.'));
+            return const Center(child: Text('Gagal memuat detail pesanan.', style: TextStyle(color: AppColors.textGrey)));
           }
 
           final order = snapshot.data!;
@@ -74,7 +80,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                  decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(16)),
                   child: Column(
                     children: [
                       Container(
@@ -89,7 +95,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Text('Order ID: #${order.shortOrderId}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text('Order ID: #${order.shortOrderId}', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
                       const SizedBox(height: 4),
                       Text('Placed on ${Formatters.formatDate(order.orderDate)}', style: const TextStyle(color: AppColors.textGrey, fontSize: 12)),
                     ],
@@ -103,26 +109,26 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                  decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(16)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.location_on_outlined, color: AppColors.primary, size: 20),
+                          Icon(Icons.location_on_outlined, color: isDark ? AppColors.accentPeach : AppColors.primary, size: 20),
                           const SizedBox(width: 8),
-                          Expanded(child: Text(order.shippingAddress, style: const TextStyle(color: AppColors.textDark, height: 1.5))),
+                          Expanded(child: Text(order.shippingAddress, style: TextStyle(color: textColor, height: 1.5))),
                         ],
                       ),
                       if (order.notes != null && order.notes!.isNotEmpty) ...[
-                        const Divider(height: 24),
+                        Divider(height: 24, color: dividerColor),
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             const Icon(Icons.note_alt_outlined, color: Colors.orange, size: 20),
                             const SizedBox(width: 8),
-                            Expanded(child: Text('Notes: ${order.notes}', style: const TextStyle(color: AppColors.textDark, fontStyle: FontStyle.italic))),
+                            Expanded(child: Text('Notes: ${order.notes}', style: TextStyle(color: textColor, fontStyle: FontStyle.italic))),
                           ],
                         ),
                       ]
@@ -136,7 +142,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                 const SizedBox(height: 8),
                 Container(
                   padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                  decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(16)),
                   child: Column(
                     children: [
                       if (order.items.isEmpty) 
@@ -153,25 +159,25 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Text(item.productName, style: const TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold)),
+                                    Text(item.productName, style: TextStyle(color: textColor, fontWeight: FontWeight.bold)),
                                     Text('${item.quantity} x ${Formatters.formatRupiah(item.unitPrice)}', style: const TextStyle(color: AppColors.textGrey, fontSize: 12)),
                                   ],
                                 ),
                               ),
                               Text(
                                 Formatters.formatRupiah(item.subtotal > 0 ? item.subtotal : (item.quantity * item.unitPrice)), 
-                                style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark)
+                                style: TextStyle(fontWeight: FontWeight.bold, color: textColor)
                               ),
                             ],
                           ),
                         );
                       }).toList(),
-                      const Divider(height: 24),
+                      Divider(height: 24, color: dividerColor),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text('Grand Total', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                          Text(Formatters.formatRupiah(order.totalPrice), style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary, fontSize: 18)),
+                          Text('Grand Total', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: textColor)),
+                          Text(Formatters.formatRupiah(order.totalPrice), style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? AppColors.accentPeach : AppColors.primary, fontSize: 18)),
                         ],
                       ),
                     ],

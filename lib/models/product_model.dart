@@ -1,14 +1,13 @@
-import 'dart:convert';
-
+/// Model yang merepresentasikan data Produk
 class ProductModel {
   final String id;
   final String name;
   final String description;
   final double price;
-  final int stock;
-  final String category;
   final String imageUrl;
-  final double averageRating;
+  final String category;
+  final int stock;
+  final double rating;
   final int reviewCount;
 
   ProductModel({
@@ -16,95 +15,77 @@ class ProductModel {
     required this.name,
     required this.description,
     required this.price,
-    required this.stock,
-    required this.category,
     required this.imageUrl,
-    required this.averageRating,
-    required this.reviewCount,
+    required this.category,
+    required this.stock,
+    this.rating = 0.0,
+    this.reviewCount = 0,
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
-    try {
-      String parsedCategory = 'Uncategorized';
-      var catData = json['category'];
-      
-      if (catData != null) {
-        if (catData is Map) {
-          parsedCategory = catData['name']?.toString() ?? 'Uncategorized';
-        } else if (catData is String) {
-          // Jika API mengirim string yang menyerupai JSON (contoh: "{id: 123, name: botol}")
-          if (catData.startsWith('{')) {
-            try {
-              // Bersihkan sedikit jika format API-nya kacau, lalu decode
-              var cleanedString = catData.replaceAll(RegExp(r'(\w+):'), r'"$1":');
-              var decoded = jsonDecode(cleanedString);
-              parsedCategory = decoded['name']?.toString() ?? 'Uncategorized';
-            } catch (e) {
-              parsedCategory = 'Uncategorized';
-            }
-          } else {
-            parsedCategory = catData;
-          }
-        }
-      } else if (json['category_name'] != null) {
-        parsedCategory = json['category_name'].toString();
+    // FITUR PERBAIKAN: Menangani kategori yang berbentuk objek nested (bersarang)
+    String parsedCategory = 'Uncategorized';
+    if (json['categories'] != null) {
+      if (json['categories'] is Map) {
+        parsedCategory = json['categories']['name']?.toString() ?? 'Uncategorized';
+      } else {
+        parsedCategory = json['categories'].toString();
       }
-
-      return ProductModel(
-        id: json['id']?.toString() ?? '',
-        name: json['name']?.toString() ?? 'Unknown Product',
-        description: json['description']?.toString() ?? '',
-        price: double.tryParse(json['price']?.toString() ?? '0') ?? 0.0,
-        stock: int.tryParse(json['stock']?.toString() ?? '0') ?? 0,
-        category: parsedCategory, 
-        
-        // PERBAIKAN: Menambahkan pendeteksi kunci "image_url" sesuai data Postman
-        imageUrl: json['image_url']?.toString() ?? json['imageUrl']?.toString() ?? json['image']?.toString() ?? '', 
-        
-        averageRating: double.tryParse(json['averageRating']?.toString() ?? json['rating']?.toString() ?? '0') ?? 0.0,
-        reviewCount: int.tryParse(json['reviewCount']?.toString() ?? '0') ?? 0,
-      );
-    } catch (e) {
-      print("🚨 [ERROR PARSING PRODUCT]: $e");
-      rethrow;
+    } else if (json['category'] != null) {
+      parsedCategory = json['category'].toString();
     }
+
+    return ProductModel(
+      id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
+      name: json['name']?.toString() ?? 'Unknown Product',
+      description: json['description']?.toString() ?? 'No description available',
+      price: double.tryParse(json['price']?.toString() ?? '0') ?? 0.0,
+      
+      // FITUR PERBAIKAN: Menangani snake_case pada API Postman
+      imageUrl: json['image_url']?.toString() ?? json['imageUrl']?.toString() ?? '',
+      category: parsedCategory,
+      stock: int.tryParse(json['stock']?.toString() ?? '0') ?? 0,
+      rating: double.tryParse(json['rating']?.toString() ?? '0') ?? 0.0,
+      reviewCount: int.tryParse(json['review_count']?.toString() ?? '0') ?? 0,
+    );
   }
 }
 
-/// Model untuk Ulasan (Review) Produk
+/// Model yang merepresentasikan data Ulasan (Review) pada Detail Produk
 class ReviewModel {
   final String id;
-  final String userName;
   final double rating;
   final String comment;
-  final String date;
+  final String reviewerName;
+  final String createdAt;
 
   ReviewModel({
     required this.id,
-    required this.userName,
     required this.rating,
     required this.comment,
-    required this.date,
+    required this.reviewerName,
+    required this.createdAt,
   });
 
   factory ReviewModel.fromJson(Map<String, dynamic> json) {
-    // Mengekstrak nama dari objek "reviewer" jika ada
-    String parsedUserName = 'Anonymous';
-    if (json['reviewer'] != null && json['reviewer'] is Map) {
-      parsedUserName = json['reviewer']['full_name']?.toString() ?? 
-                       json['reviewer']['name']?.toString() ?? 
-                       'Anonymous';
-    } else if (json['user'] != null && json['user'] is Map) {
-      parsedUserName = json['user']['full_name']?.toString() ?? 'Anonymous';
+    // Menangani nama reviewer yang biasanya ada di dalam objek 'reviewer'
+    String parsedReviewerName = 'Anonymous';
+    if (json['reviewer'] != null) {
+      if (json['reviewer'] is Map) {
+        parsedReviewerName = json['reviewer']['full_name']?.toString() ?? 
+                             json['reviewer']['name']?.toString() ?? 
+                             'Anonymous';
+      } else {
+        parsedReviewerName = json['reviewer'].toString();
+      }
     }
 
     return ReviewModel(
-      id: json['id']?.toString() ?? '',
-      userName: parsedUserName,
+      id: json['id']?.toString() ?? json['_id']?.toString() ?? '',
       rating: double.tryParse(json['rating']?.toString() ?? '0') ?? 0.0,
       comment: json['comment']?.toString() ?? '',
-      // Mencoba mencari tanggal dari created_at
-      date: json['created_at']?.toString() ?? json['date']?.toString() ?? '',
+      reviewerName: parsedReviewerName,
+      createdAt: json['created_at']?.toString() ?? json['createdAt']?.toString() ?? '',
     );
   }
 }

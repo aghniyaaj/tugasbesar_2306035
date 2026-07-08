@@ -105,8 +105,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
               const SizedBox(height: 8),
               CustomTextField(
                 controller: _nameController,
-                hintText: 'Jane Doe',
+                hintText: 'agni',
                 prefixIcon: Icons.person_outline,
+                forceLightMode: true,
               ),
               const SizedBox(height: 16),
               
@@ -117,6 +118,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 hintText: 'your@email.com',
                 prefixIcon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
+                forceLightMode: true,
               ),
               const SizedBox(height: 16),
               
@@ -127,6 +129,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 hintText: '••••••••',
                 prefixIcon: Icons.lock_outline,
                 isPassword: true,
+                forceLightMode: true,
               ),
               const SizedBox(height: 16),
               
@@ -137,6 +140,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 hintText: '••••••••',
                 prefixIcon: Icons.lock_outline,
                 isPassword: true,
+                forceLightMode: true,
               ),
               const SizedBox(height: 32),
 

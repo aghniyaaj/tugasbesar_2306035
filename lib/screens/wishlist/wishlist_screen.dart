@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../../utils/constants.dart';
 import '../../utils/formatters.dart';
 import '../../providers/wishlist_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../product/product_detail_screen.dart';
 
 class WishlistScreen extends StatelessWidget {
@@ -10,12 +11,18 @@ class WishlistScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 1. DETEKSI TEMA
+    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+    final textColor = isDark ? Colors.white : AppColors.textDark;
+    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      // 2. BACKGROUND DINAMIS
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text('My Wishlist', style: TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold, fontFamily: 'Serif')),
+        title: Text('My Wishlist', style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontFamily: 'Serif')),
         centerTitle: true,
       ),
       body: Consumer<WishlistProvider>(
@@ -51,7 +58,8 @@ class WishlistScreen extends StatelessWidget {
                   Navigator.push(context, MaterialPageRoute(builder: (context) => ProductDetailScreen(productId: product.id)));
                 },
                 child: Container(
-                  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                  // 3. WARNA KARTU DINAMIS
+                  decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(16)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -60,7 +68,7 @@ class WishlistScreen extends StatelessWidget {
                           children: [
                             Container(
                               width: double.infinity,
-                              decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: const BorderRadius.vertical(top: Radius.circular(16))),
+                              decoration: BoxDecoration(color: isDark ? Colors.grey.shade900 : Colors.grey.shade100, borderRadius: const BorderRadius.vertical(top: Radius.circular(16))),
                               child: ClipRRect(
                                 borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
                                 child: Image.network(
@@ -74,7 +82,7 @@ class WishlistScreen extends StatelessWidget {
                               top: 8,
                               right: 8,
                               child: GestureDetector(
-                                onTap: () => wishlistProvider.toggleWishlist(product), // Hapus dari wishlist
+                                onTap: () => wishlistProvider.toggleWishlist(product), 
                                 child: const Icon(Icons.favorite, color: AppColors.primary, size: 24),
                               ),
                             )
@@ -86,9 +94,10 @@ class WishlistScreen extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
+                            // 4. TEKS DINAMIS
+                            Text(product.name, style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 14), maxLines: 2, overflow: TextOverflow.ellipsis),
                             const SizedBox(height: 8),
-                            Text(Formatters.formatRupiah(product.price), style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark, fontSize: 14)),
+                            Text(Formatters.formatRupiah(product.price), style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? AppColors.accentPeach : AppColors.primary, fontSize: 14)),
                           ],
                         ),
                       ),

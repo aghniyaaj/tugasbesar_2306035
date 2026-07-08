@@ -8,42 +8,63 @@ class CartProvider with ChangeNotifier {
   CartModel? _cart;
   bool _isLoading = false;
   String? _errorMessage;
-  
-  final Set<String> _selectedProductIds = {}; 
-  final Map<String, int> _itemQuantities = {}; 
+
+  // Set untuk menyimpan ID produk yang dicentang user
+  final Set<String> _selectedProductIds = {};
 
   CartModel? get cart => _cart;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   Set<String> get selectedProductIds => _selectedProductIds;
+  
+  int get itemCount => _cart?.items.length ?? 0;
 
-  int get itemCount {
-    if (_cart == null || _cart!.items.isEmpty) return 0;
-    return _cart!.items.length;
+  // FITUR: Hitung Grand Total BERDASARKAN item yang dicentang saja
+  double get grandTotal {
+    if (_cart == null) return 0.0;
+    double total = 0.0;
+    for (var item in _cart!.items) {
+      if (_selectedProductIds.contains(item.product.id)) {
+        total += (item.product.price * item.quantity);
+      }
+    }
+    return total;
   }
 
+  // --- MENGAMBIL DATA KERANJANG ---
   Future<void> fetchCart(String token) async {
     _isLoading = true;
     notifyListeners();
+
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/cart');
       final response = await http.get(url, headers: ApiConstants.getHeaders(token));
 
       if (response.statusCode == 200) {
         final responseData = json.decode(response.body);
-        _cart = CartModel.fromJson(responseData['data'] ?? responseData);
+        final data = responseData['data'] ?? responseData;
+        _cart = CartModel.fromJson(data);
+        
+        // Opsional: Otomatis centang semua barang saat keranjang di-load
+        if (_cart != null && _selectedProductIds.isEmpty) {
+          _selectedProductIds.addAll(_cart!.items.map((e) => e.product.id));
+        }
       } else {
         _errorMessage = 'Gagal memuat keranjang.';
       }
     } catch (e) {
-      _errorMessage = 'Terjadi kesalahan jaringan.';
+      _errorMessage = 'Kesalahan jaringan: $e';
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
+  // --- FITUR BARU: ADD TO CART ---
   Future<bool> addToCart(String token, String productId, int quantity) async {
+    _isLoading = true;
+    notifyListeners();
+    
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/cart');
       final response = await http.post(
@@ -51,61 +72,84 @@ class CartProvider with ChangeNotifier {
         headers: ApiConstants.getHeaders(token),
         body: json.encode({'product_id': productId, 'quantity': quantity}),
       );
+
+      // Jika berhasil (200 atau 201 Created), panggil ulang fetchCart agar datanya sinkron
       if (response.statusCode == 200 || response.statusCode == 201) {
         await fetchCart(token);
         return true;
+      } else {
+        // Jika API error (misal 429), kita tetep coba fetchCart buat jaga-jaga
+        await fetchCart(token);
+        return false;
       }
-      return false;
     } catch (e) {
+      _isLoading = false;
+      notifyListeners();
       return false;
     }
   }
 
-  // --- FITUR BARU: HAPUS DARI KERANJANG API ---
-  Future<bool> removeCartItem(String token, String cartItemId, String productId) async {
-    try {
-      final url = Uri.parse('${ApiConstants.baseUrl}/cart/$cartItemId');
-      final response = await http.delete(url, headers: ApiConstants.getHeaders(token));
-      
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        // Hapus juga dari pilihan lokal agar rapi
-        _selectedProductIds.remove(productId);
-        _itemQuantities.remove(productId);
-        await fetchCart(token); // Refresh keranjang dari server
-        return true;
-      }
-      return false;
-    } catch (e) {
-      return false;
-    }
-  }
-
-  // --- FITUR BARU: UPDATE QTY KE API ---
+  // --- UPDATE QTY ---
   Future<void> updateCartItemQty(String token, String cartItemId, String productId, int newQty) async {
-    // Jika qty kurang dari 1, otomatis panggil fungsi hapus
     if (newQty < 1) {
+      // Jika qty dikurangi sampai 0, panggil fungsi hapus
       await removeCartItem(token, cartItemId, productId);
       return;
     }
-    
-    // Update lokal dulu agar UI terasa cepat (Optimistic UI)
-    _itemQuantities[productId] = newQty;
-    notifyListeners();
 
     try {
+      // Optimistic Update: Ubah di layar dulu agar responsif
+      if (_cart != null) {
+        final index = _cart!.items.indexWhere((item) => item.product.id == productId);
+        if (index != -1) {
+          final oldItem = _cart!.items[index];
+          _cart!.items[index] = CartItemModel(
+            id: oldItem.id,
+            product: oldItem.product,
+            quantity: newQty,
+            subtotal: oldItem.product.price * newQty,
+          );
+          notifyListeners();
+        }
+      }
+
       final url = Uri.parse('${ApiConstants.baseUrl}/cart/$cartItemId');
       await http.put(
         url,
         headers: ApiConstants.getHeaders(token),
         body: json.encode({'quantity': newQty}),
       );
-      // Panggil fetchCart lagi jika butuh refresh grand total dari server
-      // await fetchCart(token); 
+      
+      // Sinkronkan kembali dengan server
+      await fetchCart(token);
     } catch (e) {
       print("🚨 [ERROR UPDATE QTY]: $e");
     }
   }
 
+  // --- REMOVE ITEM DARI CART ---
+  Future<void> removeCartItem(String token, String cartItemId, String productId) async {
+    try {
+      // Hapus centang dari daftar selection
+      _selectedProductIds.remove(productId);
+      
+      // Optimistic Update: Hapus dari UI sementara
+      if (_cart != null) {
+        _cart!.items.removeWhere((item) => item.product.id == productId);
+        notifyListeners();
+      }
+
+      final url = Uri.parse('${ApiConstants.baseUrl}/cart/$cartItemId');
+      await http.delete(url, headers: ApiConstants.getHeaders(token));
+      
+      // Sinkronisasi ulang dengan API
+      await fetchCart(token);
+    } catch (e) {
+      print("🚨 [ERROR DELETE ITEM]: $e");
+    }
+  }
+
+  // Fungsi utilitas untuk Centang/Hapus Centang
   void toggleSelection(String productId) {
     if (_selectedProductIds.contains(productId)) {
       _selectedProductIds.remove(productId);
@@ -115,19 +159,14 @@ class CartProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  int getQuantity(String productId, int defaultQty) {
-    return _itemQuantities[productId] ?? defaultQty;
-  }
-
-  double get grandTotal {
-    double total = 0;
-    if (_cart == null) return 0;
-    for (var item in _cart!.items) {
-      if (_selectedProductIds.contains(item.product.id)) {
-        int qty = getQuantity(item.product.id, item.quantity);
-        total += (item.product.price * qty);
-      }
+  // Mendapatkan quantity barang tertentu
+  int getQuantity(String productId, int fallbackQty) {
+    if (_cart == null) return fallbackQty;
+    try {
+      final item = _cart!.items.firstWhere((element) => element.product.id == productId);
+      return item.quantity;
+    } catch (e) {
+      return fallbackQty;
     }
-    return total;
   }
 }

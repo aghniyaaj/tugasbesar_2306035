@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:tugasbesar_2306035/providers/wishlist_provider.dart';
-import '../../utils/constants.dart';
+
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
+import '../../providers/theme_provider.dart';
+import '../../utils/constants.dart';
+import '../../utils/formatters.dart';
 import '../product/product_detail_screen.dart';
-import '../../widgets/product_card.dart';
 
 class HomeScreen extends StatefulWidget {
-  final VoidCallback? onProfileTapped; // Menerima perintah pindah tab
-  
+  final VoidCallback? onProfileTapped;
+
   const HomeScreen({Key? key, this.onProfileTapped}) : super(key: key);
 
   @override
@@ -17,208 +18,245 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _limit = 10; 
-
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       final productProvider = Provider.of<ProductProvider>(context, listen: false);
-      productProvider.fetchCategories();
-      productProvider.fetchProducts();
-      
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      // Tunggu proses ambil profil selesai agar kita dapat ID User
-      await authProvider.fetchProfile(); 
-      
-      if (authProvider.user != null) {
-        // PERINTAH BUKA LACI KHUSUS SESUAI ID USER!
-        Provider.of<WishlistProvider>(context, listen: false).loadWishlist(authProvider.user!.id);
+      if (productProvider.categories.isEmpty) {
+        productProvider.fetchCategories();
+      }
+      if (productProvider.products.isEmpty) {
+        productProvider.fetchProducts();
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = Provider.of<AuthProvider>(context);
-    final userName = authProvider.user?.fullName.split(' ').first ?? 'User';
-    final userInitial = userName.isNotEmpty ? userName[0].toUpperCase() : 'U';
+    final user = Provider.of<AuthProvider>(context).user;
+    final productProvider = Provider.of<ProductProvider>(context);
     
-    // TAMBAHAN: Mengecek apakah user memiliki URL Avatar
-    final bool hasAvatar = authProvider.user?.avatarUrl != null && authProvider.user!.avatarUrl!.isNotEmpty;
+    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+    final textColor = isDark ? Colors.white : AppColors.textDark;
+    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppColors.background,
+        backgroundColor: Colors.transparent,
         elevation: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Welcome,', style: TextStyle(fontSize: 12, color: AppColors.textGrey)),
-            Text(userName, style: const TextStyle(fontSize: 20, color: AppColors.textDark, fontWeight: FontWeight.bold)),
+            const Text('Good morning,', style: TextStyle(fontSize: 12, color: AppColors.textGrey)),
+            Text(
+              user?.fullName.split(' ')[0] ?? 'User',
+              style: TextStyle(fontSize: 20, color: textColor, fontWeight: FontWeight.bold, fontFamily: 'Serif'),
+            ),
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_none, color: AppColors.textDark),
-            onPressed: () {}, 
-          ),
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
             child: GestureDetector(
-              onTap: () {
-                // Berpindah ke tab Profile di Navigation Bar bawah
-                if (widget.onProfileTapped != null) {
-                  widget.onProfileTapped!();
-                }
-              },
+              onTap: widget.onProfileTapped,
               child: CircleAvatar(
                 backgroundColor: AppColors.primary,
-                radius: 16,
-                // FITUR BARU: Menampilkan gambar dari URL jika ada
-                backgroundImage: hasAvatar ? NetworkImage(authProvider.user!.avatarUrl!) : null,
-                onBackgroundImageError: hasAvatar ? (exception, stackTrace) => {} : null,
-                // Jika tidak ada gambar, tampilkan inisial nama
-                child: !hasAvatar 
-                    ? Text(userInitial, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))
+                radius: 18,
+                backgroundImage: user?.avatarUrl != null && user!.avatarUrl!.isNotEmpty
+                    ? NetworkImage(user.avatarUrl!)
+                    : null,
+                child: (user?.avatarUrl == null || user!.avatarUrl!.isEmpty)
+                    ? Text(
+                        user?.fullName.isNotEmpty == true ? user!.fullName[0].toUpperCase() : 'U',
+                        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold),
+                      )
                     : null,
               ),
             ),
           )
         ],
       ),
-      body: Consumer<ProductProvider>(
-        builder: (context, productProvider, child) {
-          
-          // Filter lokal untuk menyembunyikan yang berbeda kategori
-          List<dynamic> displayList = productProvider.products;
-          if (productProvider.currentCategory != 'All') {
-            displayList = displayList.where((p) => 
-              p.category.toLowerCase() == productProvider.currentCategory.toLowerCase()
-            ).toList();
-          }
-
-          return SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextField(
-                    onSubmitted: (value) => productProvider.fetchProducts(search: value),
-                    decoration: InputDecoration(
-                      hintText: 'Search products...',
-                      prefixIcon: const Icon(Icons.search, color: Colors.grey),
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(30), borderSide: BorderSide.none),
-                    ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await productProvider.fetchProducts();
+        },
+        color: AppColors.primary,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              TextField(
+                style: TextStyle(color: textColor),
+                decoration: InputDecoration(
+                  hintText: 'Search products...',
+                  hintStyle: const TextStyle(color: AppColors.textGrey),
+                  prefixIcon: const Icon(Icons.search, color: Colors.grey),
+                  filled: true,
+                  fillColor: cardColor,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    borderSide: BorderSide.none,
                   ),
-                  const SizedBox(height: 20),
+                ),
+                onSubmitted: (value) {
+                  productProvider.fetchProducts(search: value);
+                },
+              ),
+              const SizedBox(height: 20),
 
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: productProvider.categories.map((category) {
-                        return _buildCategoryChip(category, productProvider.currentCategory == category, productProvider);
-                      }).toList(),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  // BARIS KONTROL SORTING: Kiri (Jumlah), Kanan (Terbaru/Termurah)
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      // BAGIAN KIRI: Dropdown Jumlah Item (Limit)
-                      Row(
-                        children: [
-                          Text('${displayList.length} items  |  ', style: const TextStyle(color: AppColors.textGrey, fontSize: 12)),
-                          DropdownButtonHideUnderline(
-                            child: DropdownButton<int>(
-                              value: productProvider.currentLimit,
-                              icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textDark, size: 16),
-                              style: const TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold, fontSize: 12),
-                              items: const [
-                                DropdownMenuItem(value: 10, child: Text('Show 10')),
-                                DropdownMenuItem(value: 20, child: Text('Show 20')),
-                                DropdownMenuItem(value: 50, child: Text('Show 50')),
-                              ],
-                              onChanged: (value) {
-                                if (value != null) productProvider.fetchProducts(limit: value);
-                              },
-                            ),
-                          ),
-                        ],
-                      ),
-                      
-                      // BAGIAN KANAN: Dropdown Urutan (Sort)
-                      DropdownButtonHideUnderline(
-                        child: DropdownButton<String>(
-                          value: productProvider.currentSort,
-                          icon: const Icon(Icons.keyboard_arrow_down, color: AppColors.textDark, size: 16),
-                          style: const TextStyle(color: AppColors.textDark, fontWeight: FontWeight.bold, fontSize: 12),
-                          items: const [
-                            DropdownMenuItem(value: 'newest', child: Text('Terbaru')),
-                            DropdownMenuItem(value: 'price_asc', child: Text('Termurah')),
-                            DropdownMenuItem(value: 'price_desc', child: Text('Termahal')),
-                          ],
-                          onChanged: (value) {
-                            if (value != null) productProvider.fetchProducts(sort: value);
-                          },
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: productProvider.categories.map((categoryName) {
+                    final isSelected = productProvider.currentCategory == categoryName;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: ChoiceChip(
+                        label: Text(categoryName),
+                        selected: isSelected,
+                        showCheckmark: false, // 🔥 MEMATIKAN IKON CENTANG 🔥
+                        selectedColor: AppColors.primary,
+                        backgroundColor: cardColor,
+                        labelStyle: TextStyle(
+                          color: isSelected 
+                              ? Colors.white 
+                              : (isDark ? Colors.grey.shade300 : AppColors.textDark),
+                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                         ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: BorderSide(color: isSelected ? AppColors.primary : Colors.transparent),
+                        ),
+                        onSelected: (selected) {
+                          if (selected) {
+                            productProvider.fetchProducts(category: categoryName);
+                          } else {
+                            productProvider.fetchProducts(category: 'All'); 
+                          }
+                        },
                       ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('${productProvider.products.length} items', style: const TextStyle(color: AppColors.textGrey)),
+                  PopupMenuButton<String>(
+                    child: Row(
+                      children: [
+                        Text('Sort by: ', style: TextStyle(color: textColor)),
+                        Text(
+                          productProvider.currentSort,
+                          style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
+                        ),
+                        Icon(Icons.keyboard_arrow_down, color: textColor, size: 16),
+                      ],
+                    ),
+                    onSelected: (value) {
+                      productProvider.fetchProducts(sort: value);
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(value: 'newest', child: Text('Newest')),
+                      const PopupMenuItem(value: 'price_asc', child: Text('Lowest Price')),
+                      const PopupMenuItem(value: 'price_desc', child: Text('Highest Price')),
                     ],
                   ),
-                  const SizedBox(height: 16),
-
-                  productProvider.isLoading 
-                    ? const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator(color: AppColors.primary)))
-                    : displayList.isEmpty 
-                        ? const Center(child: Padding(padding: EdgeInsets.all(40), child: Text("Tidak ada produk di kategori ini.", style: TextStyle(color: AppColors.textGrey))))
-                        : GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(), 
-                            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              childAspectRatio: 0.65, 
-                              crossAxisSpacing: 16,
-                              mainAxisSpacing: 16,
-                            ),
-                            itemCount: displayList.length,
-                            itemBuilder: (context, index) {
-                              final product = displayList[index];
-                              return ProductCard(
-                                product: product,
-                                onTap: () {
-                                  Navigator.push(context, MaterialPageRoute(builder: (context) => ProductDetailScreen(productId: product.id)));
-                                }
-                              );
-                            },
-                          ),
                 ],
               ),
-            ),
-          );
-        }
-      ),
-    );
-  }
+              const SizedBox(height: 16),
 
-  Widget _buildCategoryChip(String title, bool isSelected, ProductProvider provider) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8.0),
-      child: GestureDetector(
-        onTap: () => provider.fetchProducts(category: title),
-        child: Chip(
-          label: Text(title),
-          backgroundColor: isSelected ? AppColors.primary : Colors.white,
-          labelStyle: TextStyle(
-            color: isSelected ? Colors.white : AppColors.textDark,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              if (productProvider.isLoading)
+                const Center(child: Padding(padding: EdgeInsets.all(32.0), child: CircularProgressIndicator(color: AppColors.primary)))
+              else if (productProvider.products.isEmpty)
+                const Center(child: Padding(padding: EdgeInsets.all(32.0), child: Text('Tidak ada produk di kategori ini.', style: TextStyle(color: AppColors.textGrey))))
+              else
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.65,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                  ),
+                  itemCount: productProvider.products.length,
+                  itemBuilder: (context, index) {
+                    final product = productProvider.products[index];
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => ProductDetailScreen(productId: product.id)));
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: cardColor,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 5)),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Stack(
+                                children: [
+                                  ClipRRect(
+                                    borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                                    child: Image.network(
+                                      product.imageUrl,
+                                      width: double.infinity,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (ctx, err, stack) => Container(color: Colors.grey.shade200, child: const Center(child: Icon(Icons.image, color: Colors.grey))),
+                                    ),
+                                  ),
+                                  Positioned(
+                                    top: 8, right: 8,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(color: Colors.white70, shape: BoxShape.circle),
+                                      child: const Icon(Icons.favorite_border, color: AppColors.primary, size: 16),
+                                    ),
+                                  )
+                                ],
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(12.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(product.category.toUpperCase(), style: const TextStyle(fontSize: 9, color: AppColors.textGrey, fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    product.name,
+                                    style: TextStyle(fontWeight: FontWeight.bold, color: textColor, fontSize: 13), 
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    Formatters.formatRupiah(product.price),
+                                    style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? AppColors.accentPeach : AppColors.primary, fontSize: 13), 
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+            ],
           ),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: const BorderSide(color: Colors.transparent)),
         ),
       ),
     );

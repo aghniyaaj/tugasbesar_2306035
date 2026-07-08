@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/order_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../utils/constants.dart';
 import '../../utils/formatters.dart';
 import 'order_detail_screen.dart'; 
@@ -39,11 +40,18 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // DETEKSI TEMA
+    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+    final textColor = isDark ? Colors.white : AppColors.textDark;
+    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text('Order History', style: TextStyle(fontFamily: 'Serif')),
+        title: Text('Order History', style: TextStyle(fontFamily: 'Serif', color: textColor)),
         centerTitle: true,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
       ),
       body: Consumer<OrderProvider>(
         builder: (context, orderProvider, child) {
@@ -61,7 +69,6 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
             itemBuilder: (context, index) {
               final order = orderProvider.orders[index];
               
-              // FITUR BARU: GestureDetector agar kotak pesanan bisa diklik
               return GestureDetector(
                 onTap: () {
                   Navigator.push(
@@ -75,7 +82,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                   margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cardColor, // WARNA DINAMIS
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8)],
                   ),
@@ -85,7 +92,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('#${order.shortOrderId}', style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                          Text('#${order.shortOrderId}', style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
@@ -101,13 +108,12 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(Formatters.formatDate(order.orderDate), style: const TextStyle(color: AppColors.textGrey, fontSize: 12)),
-                      const Divider(height: 24),
+                      Divider(height: 24, color: isDark ? Colors.grey.shade800 : Colors.grey.shade200),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Kita hilangkan tulisan jumlah item karena dari API list ini belum tentu lengkap
                           const Text('Lihat Detail ➔', style: TextStyle(color: AppColors.textGrey, fontSize: 12, fontWeight: FontWeight.bold)),
-                          Text(Formatters.formatRupiah(order.totalPrice), style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary)),
+                          Text(Formatters.formatRupiah(order.totalPrice), style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? AppColors.accentPeach : AppColors.primary)),
                         ],
                       ),
                     ],

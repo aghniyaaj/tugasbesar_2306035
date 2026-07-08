@@ -102,6 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   hintText: 'your@email.com',
                   prefixIcon: Icons.email_outlined,
                   keyboardType: TextInputType.emailAddress,
+                  forceLightMode: true,
                 ),
                 
                 const SizedBox(height: 16),
@@ -113,14 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   hintText: '••••••••',
                   prefixIcon: Icons.lock_outline,
                   isPassword: true,
-                ),
-
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {}, // Opsional
-                    child: const Text('Forgot password?', style: TextStyle(color: AppColors.textGrey)),
-                  ),
+                  forceLightMode: true,
                 ),
                 
                 const SizedBox(height: 16),

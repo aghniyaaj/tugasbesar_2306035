@@ -37,7 +37,7 @@ class WishlistProvider with ChangeNotifier {
         'stock': item.stock,
         'category': item.category,
         'imageUrl': item.imageUrl,
-        'averageRating': item.averageRating,
+        'rating': item.rating,
         'reviewCount': item.reviewCount,
       });
     }).toList();

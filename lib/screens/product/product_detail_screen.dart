@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import '../../models/product_model.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/cart_provider.dart';
+import '../../providers/product_provider.dart';
+import '../../providers/review_provider.dart';
+import '../../providers/wishlist_provider.dart'; 
+import '../../providers/theme_provider.dart';
 import '../../utils/constants.dart';
 import '../../utils/formatters.dart';
-import '../../providers/product_provider.dart';
-import '../../providers/cart_provider.dart';
-import '../../providers/auth_provider.dart';
-import '../../providers/wishlist_provider.dart';
-import '../../providers/review_provider.dart'; // IMPORT REVIEW PROVIDER
 
 class ProductDetailScreen extends StatefulWidget {
   final String productId;
+
   const ProductDetailScreen({Key? key, required this.productId}) : super(key: key);
 
   @override
@@ -17,168 +23,139 @@ class ProductDetailScreen extends StatefulWidget {
 }
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
-  bool _isAddingToCart = false;
+  int _ratingBintangInput = 5;
+  final TextEditingController _commentController = TextEditingController();
+  ProductModel? _localProductDetail;
+  bool _isLoadingDetail = false;
 
   @override
   void initState() {
     super.initState();
-    // Meminta provider mengambil ulasan saat halaman ini dibuka
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<ReviewProvider>(context, listen: false).fetchReviews(widget.productId);
+      _checkAndFetchProductDetails();
     });
   }
 
-  void _addToCart() async {
-    setState(() => _isAddingToCart = true);
-
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final cartProvider = Provider.of<CartProvider>(context, listen: false);
-
-    if (authProvider.token == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Silakan login terlebih dahulu.')));
-      setState(() => _isAddingToCart = false);
-      return;
-    }
-
-    bool success = await cartProvider.addToCart(authProvider.token!, widget.productId, 1);
-    
-    setState(() => _isAddingToCart = false);
-
-    if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Berhasil ditambahkan ke keranjang! 🛒'), backgroundColor: Colors.green)
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal menambahkan ke keranjang.'), backgroundColor: Colors.red)
-      );
+  Future<void> _checkAndFetchProductDetails() async {
+    final productProvider = Provider.of<ProductProvider>(context, listen: false);
+    try {
+      _localProductDetail = productProvider.products.firstWhere((p) => p.id == widget.productId);
+      if (mounted) setState(() {}); 
+    } catch (e) {
+      setState(() => _isLoadingDetail = true);
+      try {
+        final url = Uri.parse('${ApiConstants.baseUrl}/products/${widget.productId}');
+        final response = await http.get(url);
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body)['data'] ?? json.decode(response.body);
+          setState(() => _localProductDetail = ProductModel.fromJson(data));
+        }
+      } catch (err) {
+         print("🚨 [ERROR DETAIL]: $err");
+      } finally {
+        if (mounted) setState(() => _isLoadingDetail = false);
+      }
     }
   }
 
-  // --- MUNCULKAN DIALOG TULIS ULASAN ---
-  void _showAddReviewDialog() {
-    final token = Provider.of<AuthProvider>(context, listen: false).token;
-    if (token == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Silakan login untuk memberi ulasan.')));
-      return;
-    }
+  @override
+  void dispose() {
+    _commentController.dispose();
+    super.dispose();
+  }
 
-    double selectedRating = 5.0;
-    final commentController = TextEditingController();
-
-    showDialog(
+  void _showReviewBottomSheet(BuildContext context) {
+    final isDark = Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
+    
+    showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: const Text('Tulis Ulasan', style: TextStyle(fontFamily: 'Serif', fontWeight: FontWeight.bold)),
-              content: Column(
+          builder: (context, setSheetState) {
+            return Container(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom + 24, top: 24, left: 24, right: 24),
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text('Tulis Ulasanmu', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Serif', color: isDark ? Colors.white : AppColors.textDark)),
+                  const SizedBox(height: 16),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: List.generate(5, (index) {
                       return IconButton(
-                        icon: Icon(
-                          index < selectedRating ? Icons.star : Icons.star_border,
-                          color: Colors.orange,
-                          size: 32,
-                        ),
-                        onPressed: () {
-                          setStateDialog(() {
-                            selectedRating = index + 1.0;
-                          });
-                        },
+                        icon: Icon(index < _ratingBintangInput ? Icons.star : Icons.star_border, color: Colors.orange, size: 36),
+                        onPressed: () => setSheetState(() => _ratingBintangInput = index + 1),
                       );
                     }),
                   ),
                   const SizedBox(height: 16),
                   TextField(
-                    controller: commentController,
-                    maxLines: 3,
+                    controller: _commentController,
+                    maxLines: 4,
+                    style: TextStyle(color: isDark ? Colors.white : AppColors.textDark),
                     decoration: InputDecoration(
-                      hintText: 'Bagaimana pendapatmu tentang produk ini?',
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      hintText: 'Apa pendapatmu tentang produk ini?',
+                      hintStyle: const TextStyle(color: AppColors.textGrey),
+                      filled: true,
+                      fillColor: isDark ? Colors.grey.shade900 : Colors.grey.shade100,
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                     ),
                   ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () async {
+                      if (_commentController.text.trim().isEmpty) return;
+                      final token = Provider.of<AuthProvider>(context, listen: false).token;
+                      if (token == null) return;
+                      final success = await Provider.of<ReviewProvider>(context, listen: false).addReview(token, widget.productId, _ratingBintangInput.toDouble(), _commentController.text.trim());
+                      if (success) { if (mounted) Navigator.pop(context); _commentController.clear(); }
+                    },
+                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
+                    child: const Text('KIRIM ULASAN', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  )
                 ],
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Batal', style: TextStyle(color: AppColors.textGrey)),
-                ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                  ),
-                  onPressed: () async {
-                    if (commentController.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Komentar tidak boleh kosong')));
-                      return;
-                    }
-                    
-                    Navigator.pop(context); // Tutup dialog
-                    
-                    final success = await Provider.of<ReviewProvider>(context, listen: false)
-                        .addReview(token, widget.productId, selectedRating, commentController.text);
-                        
-                    if (success && mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Terima kasih atas ulasanmu!'), backgroundColor: Colors.green));
-                    }
-                  },
-                  child: const Text('Kirim', style: TextStyle(color: Colors.white)),
-                ),
-              ],
             );
           }
         );
-      },
+      }
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final productProvider = Provider.of<ProductProvider>(context);
-    
-    if (productProvider.products.isEmpty) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
+    if (_isLoadingDetail) return Scaffold(backgroundColor: Theme.of(context).scaffoldBackgroundColor, body: const Center(child: CircularProgressIndicator(color: AppColors.primary)));
+    if (_localProductDetail == null) return Scaffold(backgroundColor: Theme.of(context).scaffoldBackgroundColor, appBar: AppBar(backgroundColor: Colors.transparent, elevation: 0), body: const Center(child: Text("Produk tidak ditemukan!")));
 
-    final product = productProvider.products.firstWhere((p) => p.id == widget.productId);
+    final product = _localProductDetail!;
+    final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
+    final textColor = isDark ? Colors.white : AppColors.textDark;
+    final cardColor = isDark ? const Color(0xFF1E1E1E) : Colors.white;
+    final borderColor = isDark ? Colors.grey.shade800 : Colors.grey.shade100;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textDark),
-          onPressed: () => Navigator.pop(context),
-        ),
+        iconTheme: IconThemeData(color: textColor),
         actions: [
           Consumer<WishlistProvider>(
             builder: (context, wishlistProvider, child) {
               final isFav = wishlistProvider.isWishlisted(product.id);
               return IconButton(
-                icon: Icon(
-                  isFav ? Icons.favorite : Icons.favorite_border, 
-                  color: AppColors.primary
-                ),
-                onPressed: () {
-                  wishlistProvider.toggleWishlist(product);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(isFav ? 'Dihapus dari Wishlist' : 'Ditambahkan ke Wishlist ❤️'),
-                      duration: const Duration(seconds: 1),
-                    )
-                  );
-                }, 
+                icon: Icon(isFav ? Icons.favorite : Icons.favorite_border, color: isFav ? AppColors.primary : (isDark ? Colors.white : AppColors.textGrey)),
+                onPressed: () => wishlistProvider.toggleWishlist(product), 
               );
-            },
+            }
           )
         ],
       ),
@@ -188,154 +165,130 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 1. Gambar Produk
             Container(
-              height: 400,
-              width: double.infinity,
-              color: Colors.grey.shade200,
-              child: Image.network(
-                product.imageUrl,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.image_not_supported, size: 50)),
-              ),
+              height: 400, width: double.infinity, color: isDark ? Colors.grey.shade900 : Colors.grey.shade200,
+              child: Image.network(product.imageUrl, fit: BoxFit.cover, errorBuilder: (c, e, s) => const Icon(Icons.image_not_supported, color: Colors.grey, size: 50))
             ),
-            
-            // 2. Info Detail Produk
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(product.category.toUpperCase(), style: const TextStyle(color: AppColors.textGrey, fontSize: 12)),
+                  Text(product.category.toUpperCase(), style: const TextStyle(color: AppColors.textGrey, fontSize: 12, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  Text(
-                    product.name,
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: AppColors.textDark, fontFamily: 'Serif'),
-                  ),
+                  Text(product.name, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: textColor, fontFamily: 'Serif')),
                   const SizedBox(height: 12),
-                  
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        Formatters.formatRupiah(product.price.toDouble()),
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.textDark),
-                      ),
-                      Row(
-                        children: [
-                          const Icon(Icons.star, color: Colors.orange, size: 16),
-                          const SizedBox(width: 4),
-                          Text(product.averageRating.toString(), style: const TextStyle(color: AppColors.textGrey, fontSize: 12)),
-                        ],
+                      Expanded(child: Text(Formatters.formatRupiah(product.price), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor))),
+                      Consumer<ReviewProvider>(
+                        builder: (context, reviewProvider, child) {
+                          double displayRating = product.rating;
+                          int totalReviews = reviewProvider.reviews.length;
+                          if (totalReviews > 0) {
+                            double totalScore = 0;
+                            for (var r in reviewProvider.reviews) totalScore += r.rating;
+                            displayRating = totalScore / totalReviews;
+                          }
+                          return Row(
+                            children: [
+                              const Icon(Icons.star, color: Colors.orange, size: 18),
+                              const SizedBox(width: 4),
+                              Text(displayRating > 0 ? displayRating.toStringAsFixed(1) : '0', style: const TextStyle(color: AppColors.textGrey, fontSize: 14, fontWeight: FontWeight.bold)),
+                              if (totalReviews > 0) Text(' ($totalReviews)', style: const TextStyle(color: AppColors.textGrey, fontSize: 12)),
+                            ],
+                          );
+                        }
                       )
                     ],
                   ),
                   const SizedBox(height: 24),
-                  
                   const Text('DESCRIPTION', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textGrey)),
                   const SizedBox(height: 8),
-                  Text(
-                    product.description,
-                    style: const TextStyle(color: AppColors.textDark, height: 1.5),
-                  ),
-                  const SizedBox(height: 32),
-
-                  // 3. BAGIAN REVIEW (ULASAN)
+                  Text(product.description, style: TextStyle(color: textColor, height: 1.5)),
+                  const SizedBox(height: 40),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('REVIEWS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textGrey)),
-                      TextButton(
-                        onPressed: _showAddReviewDialog,
-                        child: const Text('Tulis Ulasan', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold)),
-                      )
+                      GestureDetector(onTap: () => _showReviewBottomSheet(context), child: const Text('Tulis Ulasan', style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold, fontSize: 12)))
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  
+                  const SizedBox(height: 16),
                   Consumer<ReviewProvider>(
                     builder: (context, reviewProvider, child) {
-                      if (reviewProvider.isLoading) {
-                        return const Center(child: CircularProgressIndicator(color: AppColors.primary));
-                      }
-                      
-                      if (reviewProvider.reviews.isEmpty) {
-                        return const Text('Belum ada ulasan untuk produk ini.', style: TextStyle(color: AppColors.textGrey, fontStyle: FontStyle.italic));
-                      }
+                      if (reviewProvider.isLoading) return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+                      if (reviewProvider.reviews.isEmpty) return const Text('Belum ada ulasan.', style: TextStyle(color: AppColors.textGrey, fontStyle: FontStyle.italic));
+
+                      final currentUserName = Provider.of<AuthProvider>(context, listen: false).user?.fullName;
+                      final token = Provider.of<AuthProvider>(context, listen: false).token;
 
                       return ListView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        padding: EdgeInsets.zero,
+                        shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
                         itemCount: reviewProvider.reviews.length,
                         itemBuilder: (context, index) {
                           final review = reviewProvider.reviews[index];
+                          final isMyReview = review.reviewerName == currentUserName;
                           return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: Colors.grey.shade100),
-                            ),
+                            margin: const EdgeInsets.only(bottom: 12), padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(color: cardColor, borderRadius: BorderRadius.circular(16), border: Border.all(color: isMyReview ? AppColors.primary.withOpacity(0.5) : borderColor)),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text(review.userName, style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                                    Text(review.reviewerName, style: TextStyle(fontWeight: FontWeight.bold, color: textColor)),
                                     Row(
-                                      children: List.generate(5, (starIndex) {
-                                        return Icon(
-                                          starIndex < review.rating ? Icons.star : Icons.star_border,
-                                          color: Colors.orange,
-                                          size: 14,
-                                        );
-                                      }),
+                                      children: [
+                                        if (isMyReview && token != null)
+                                          GestureDetector(onTap: () => reviewProvider.deleteReview(token, review.id, widget.productId), child: const Padding(padding: EdgeInsets.only(right: 8.0), child: Icon(Icons.delete_outline, color: Colors.red, size: 18))),
+                                        ...List.generate(5, (starIndex) => Icon(starIndex < review.rating ? Icons.star : Icons.star_border, size: 14, color: Colors.orange))
+                                      ],
                                     )
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                Text(review.comment, style: const TextStyle(color: AppColors.textDark, fontSize: 13)),
-                                if (review.date.isNotEmpty) ...[
-                                  const SizedBox(height: 8),
-                                  Text(Formatters.formatDate(review.date), style: const TextStyle(color: AppColors.textGrey, fontSize: 10)),
-                                ]
+                                Text(review.comment, style: TextStyle(color: textColor, fontSize: 13)),
+                                if (review.createdAt.isNotEmpty) ...[const SizedBox(height: 8), Text(Formatters.formatDate(review.createdAt), style: const TextStyle(color: AppColors.textGrey, fontSize: 10))]
                               ],
                             ),
                           );
-                        },
+                        }
                       );
-                    },
+                    }
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 100), 
                 ],
               ),
             ),
           ],
         ),
       ),
-      
       bottomNavigationBar: Container(
         padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))
-          ],
-        ),
+        decoration: BoxDecoration(color: cardColor, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))]),
         child: SafeArea(
           child: ElevatedButton(
-            onPressed: _isAddingToCart ? null : _addToCart,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-            ),
-            child: _isAddingToCart 
-                ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                : const Text('ADD TO CART', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
+            onPressed: () async {
+              final authProvider = Provider.of<AuthProvider>(context, listen: false);
+              if (authProvider.token == null) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Harap login terlebih dahulu!')));
+                return;
+              }
+              
+              final cartProvider = Provider.of<CartProvider>(context, listen: false);
+              final success = await cartProvider.addToCart(authProvider.token!, product.id, 1);
+              
+              if (success) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Berhasil ditambahkan ke keranjang!'), backgroundColor: Colors.green));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal menambahkan ke keranjang.'), backgroundColor: Colors.red));
+              }
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
+            child: const Text('ADD TO CART', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
           ),
         ),
       ),
