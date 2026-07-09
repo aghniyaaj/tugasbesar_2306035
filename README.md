@@ -46,11 +46,11 @@ Aplikasi ini telah memuat seluruh fitur fungsionalitas yang disyaratkan pada UAS
 ## 📸 Screenshot Aplikasi
 Berikut adalah tampilan antarmuka (UI) dari aplikasi Bloom:
 
-| Login & Register | Home / Katalog | Detail Produk |
+| Login / Register | Home / Katalog | Detail Produk |
 | :---: | :---: | :---: |
-| ![Login](screenshots/login.jpg) | ![Home](screenshots/home.jpg) | ![Product](screenshots/profile.jpg) |
+| ![Login](screenshots/login.jpg) | ![Home](screenshots/home.jpg) | ![Product](screenshots/detailProduk.jpg) |
 
-| Keranjang (Cart) | Checkout & Order | Profil |
+| Keranjang (Cart) | Checkout / Order | Profil |
 | :---: | :---: | :---: |
 | ![Cart](screenshots/cart.jpg) | ![Order](screenshots/order.jpg) | ![Profile](screenshots/profile.jpg) |
 
