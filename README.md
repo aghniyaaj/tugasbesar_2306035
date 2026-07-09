@@ -1,115 +1,86 @@
-# tugasbesar_2306035
+# 🌸 Bloom App - E-Commerce Fashion Mobile
 
-# 🌸 Bloom - Lifestyle E-Commerce App
+Aplikasi E-Commerce modern berbasis Flutter yang dibangun untuk memenuhi Ujian Akhir Semester (UAS) mata kuliah **Praktikum Pemrograman Mobile**. Aplikasi ini telah terintegrasi dengan REST API yang disediakan dan dilengkapi dengan sistem Autentikasi, Katalog Produk, Keranjang Belanja, hingga riwayat Pemesanan.
 
-Aplikasi Bloom adalah platform e-commerce bergaya lifestyle boutique yang dikembangkan menggunakan Flutter. Aplikasi ini terintegrasi penuh dengan REST API dan dilengkapi dengan fitur manajemen state dinamis, Dark Mode, serta kalkulasi keranjang belanja yang presisi.
+## 👨‍💻 Identitas Mahasiswa
+- **Nama**  : Aghniya Afiatul Jannah
+- **NIM**   : 2306035
+- **Kelas** : B
 
-# Identitas Mahasiswa
+---
 
-Nama: Aghniya Afiatul Jannah
+## ✨ Daftar Fitur yang Diimplementasikan
+Aplikasi ini telah memuat seluruh fitur fungsionalitas yang disyaratkan pada UAS, antara lain:
 
-NIM: 2306035
+1. **🔐 Autentikasi & Profil**
+   - Registrasi dan Login menggunakan JWT Token API.
+   - Fitur *Auto-Login* (Sesi tersimpan di *SharedPreferences*).
+   - Menampilkan dan Mengubah profil (*Nama* dan *No Telepon*).
+   - Fitur Logout.
 
-Kelas: Kelas B
+2. **🛍️ Katalog Produk & Pencarian**
+   - Menampilkan daftar produk menggunakan *GridView/ListView*.
+   - Fitur Filter Kategori & Pencarian produk (Search).
+   - *Sorting* berdasarkan harga termurah, termahal, dan terbaru.
+   - Halaman Detail Produk lengkap dengan ulasan (*reviews*).
 
-Mata Kuliah: Praktikum Pemrograman Mobile 2026
+3. **🛒 Keranjang Belanja (Cart)**
+   - Menambahkan produk ke keranjang.
+   - Menambah (`+`) / mengurangi (`-`) dan menghapus kuantitas item.
+   - Menghitung Total Harga (*Grand Total*) secara *real-time*.
+   - Fitur kosongkan keranjang (dengan dialog konfirmasi).
 
-# Screenshot Aplikasi
+4. **📦 Pemesanan (Checkout & Orders)**
+   - Proses Checkout dengan formulir alamat pengiriman dan catatan.
+   - Menampilkan Riwayat Pesanan beserta statusnya (Pending, Processing, Shipped, Delivered).
+   - Warna indikator yang berbeda untuk setiap status pesanan.
+   - Halaman detail transaksi pemesanan lengkap.
 
-(Catatan: Gambar di bawah ini diambil dari folder screenshots/. Pastikan Anda meletakkan file gambar di dalam folder tersebut).
+5. **🌙 Fitur Tambahan (Lanjutan)**
+   - **Dark Mode**: Menggunakan *ThemeProvider*, tersimpan di perangkat agar tema tidak hilang saat aplikasi ditutup.
+   - **State Management**: Seluruh alur data dikelola dengan rapi menggunakan `Provider`.
+   - **Dokumentasi Lengkap**: Semua *class* dan *method* telah didokumentasikan dengan bahasa Indonesia yang jelas.
 
-Keterangan (Dari kiri ke kanan): Login Screen, Home Screen, Product Detail, Cart Screen (dengan Checkbox & Kalkulasi Grand Total), Profile Screen (Mode Gelap).
+---
 
-# Daftar Fitur yang Diimplementasikan
+## 📸 Screenshot Aplikasi
+Berikut adalah tampilan antarmuka (UI) dari aplikasi Bloom:
 
-Aplikasi ini mencakup seluruh fitur yang diinstruksikan dalam rubrik UAS, beserta beberapa peningkatan logika frontend:
+| Login & Register | Home / Katalog | Detail Produk |
+| :---: | :---: | :---: |
+| ![Login](screenshots/login.jpg) | ![Home](screenshots/home.jpg) | ![Product](screenshots/profile.jpg) |
 
-Autentikasi (API & Provider):
+| Keranjang (Cart) | Checkout & Order | Profil & Dark Mode |
+| :---: | :---: | :---: |
+| ![Cart](screenshots/cart.jpg) | ![Order](screenshots/order.jpg) | ![Wishlist](screenshots/wishlist.jpg) |
 
-Register pengguna baru (dengan validasi format Email & Password).
+*(Catatan: Anda bisa menyesuaikan ulang nama file `.jpg` di atas jika ada yang kurang tepat)*
 
-Login dan penyimpanan Bearer Token menggunakan SharedPreferences.
+---
 
-Auto-login (Cek token aktif di Splash Screen).
+## 🚀 Cara Menjalankan Aplikasi
 
-Katalog Produk & Home:
+Ikuti langkah-langkah di bawah ini untuk menjalankan *project* secara lokal di komputer Anda:
 
-Menampilkan daftar kategori dan produk dari API.
+### 1. Clone Repository
+Buka terminal Anda dan ketikkan perintah berikut untuk mengunduh kode aplikasi:
+```bash
+git clone https://github.com/aghniyaaj/tugasbesar_2306035.git
 
-Fitur Pencarian (Search Bar) dan Penyortiran (Sort by Newest/Price).
+### 2. Masuk ke Folder Project
+Pindah ke direktori folder yang baru saja di-clone:
+```bash
+cd tugasbesar_2306035
 
-Frontend Filtering cerdas (Menyaring produk yang tidak sesuai dengan Chips Kategori).
+### 3. Install Dependensi (Packages)
+Unduh dan sinkronkan semua packages flutter yang digunakan dalam aplikasi:
+```bash
+flutter pub get
 
-Detail Produk & Ulasan:
+### 4. Jalankan Aplikasi
+Pastikan Emulator Android atau smartphone Anda sudah terhubung (Debug mode), kemudian ketik:
+```bash
+flutter run
 
-Menampilkan detail lengkap produk (Harga, Deskripsi, Gambar).
-
-Daftar Review (Ulasan) dinamis dari API.
-
-Kalkulasi Bintang/Rating otomatis berdasarkan total ulasan.
-
-Fitur Tambah Ulasan (POST) dan Hapus Ulasan sendiri (DELETE).
-
-Keranjang Belanja (Cart):
-
-Integrasi Add to Cart dari layar Detail Produk.
-
-Fitur ubah kuantitas (Plus/Minus) dan hapus (Trash) item di keranjang.
-
-Fitur Checkbox Lokal: Memilih spesifik barang mana yang ingin di-checkout, Grand Total hanya menghitung barang yang dicentang.
-
-Checkout & Riwayat Pesanan (Order):
-
-Proses penempatan pesanan (POST) beserta Order Notes dan Shipping Address.
-
-Riwayat Pesanan dengan pengelompokkan status (Pending, Processing, Delivered dll) beserta color-coding.
-
-Menampilkan detail pesanan (Subtotal per barang & Grand Total).
-
-Profil & Wishlist:
-
-Edit profil (Nama, Nomor HP, Avatar) menggunakan metode PUT (Mengabaikan nilai null jika tidak diubah).
-
-Fitur Wishlist menggunakan SharedPreferences yang disimpan secara unik per ID User.
-
-Sistem Tema Cerdas (Dark Mode):
-
-Dukungan Light Mode (Warm Ivory) dan Dark Mode (Deep Charcoal).
-
-Warna komponen (Card, Text, Form Input, Appbar) beradaptasi secara otomatis (Bunglon) dengan mendengarkan ThemeProvider secara global di seluruh layar aplikasi.
-
-# Cara Menjalankan Aplikasi
-Sebelum menjalankan, file apk dapat diakses melalui link https://bit.ly/4fpOXgu
-Ikuti langkah-langkah berikut untuk menjalankan aplikasi Bloom di local machine Anda:
-
-Prasyarat:
-
-Pastikan Flutter SDK sudah terinstal (disarankan versi 3.10.0 atau ke atas).
-
-Pastikan Emulator Android/iOS sudah berjalan, atau gunakan perangkat fisik yang terhubung menggunakan USB Debugging.
-
-Langkah Instalasi:
-
-Buka terminal/command prompt dan masuk ke direktori project ini.
-
-Jalankan perintah berikut untuk mengunduh semua paket (dependencies) yang dibutuhkan:
-
-```flutter pub get```
-
-
-(Opsional jika menggunakan VS Code) Jika Anda baru saja berpindah dari web (Chrome) ke Emulator/HP, sangat disarankan untuk membersihkan cache terlebih dahulu:
-
-```flutter clean```
-```flutter pub get```
-
-
-Jalankan aplikasi dengan perintah:
-
-```flutter run```
-
-
-(Atau cukup tekan tombol F5 pada VS Code).
-
-Tunggu beberapa saat (proses kompilasi pertama kali oleh Gradle mungkin memakan waktu 2-5 menit tergantung spesifikasi RAM laptop Anda).
-
-
+### Menjalankan Aplikasi Langsung
+Untuk menjalankan aplikasi langsung di perangkat mobile dapat mengunduh file apk pada folder release/app-release.apk atau melalui link drive https://bit.ly/4fpOXgu
