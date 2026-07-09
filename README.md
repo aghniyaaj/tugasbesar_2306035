@@ -78,8 +78,8 @@ Dukungan Light Mode (Warm Ivory) dan Dark Mode (Deep Charcoal).
 
 Warna komponen (Card, Text, Form Input, Appbar) beradaptasi secara otomatis (Bunglon) dengan mendengarkan ThemeProvider secara global di seluruh layar aplikasi.
 
-🚀 Cara Menjalankan Aplikasi
-
+# Cara Menjalankan Aplikasi
+Sebelum menjalankan, file apk dapat diakses melalui link https://bit.ly/4fpOXgu
 Ikuti langkah-langkah berikut untuk menjalankan aplikasi Bloom di local machine Anda:
 
 Prasyarat:
@@ -99,17 +99,17 @@ Jalankan perintah berikut untuk mengunduh semua paket (dependencies) yang dibutu
 
 (Opsional jika menggunakan VS Code) Jika Anda baru saja berpindah dari web (Chrome) ke Emulator/HP, sangat disarankan untuk membersihkan cache terlebih dahulu:
 
-flutter clean
-flutter pub get
+```flutter clean
+flutter pub get```
 
 
 Jalankan aplikasi dengan perintah:
 
-flutter run
+```flutter run```
 
 
 (Atau cukup tekan tombol F5 pada VS Code).
 
 Tunggu beberapa saat (proses kompilasi pertama kali oleh Gradle mungkin memakan waktu 2-5 menit tergantung spesifikasi RAM laptop Anda).
 
-Dibuat dengan ❤️ menggunakan Flutter.
+
