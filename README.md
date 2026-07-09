@@ -50,11 +50,10 @@ Berikut adalah tampilan antarmuka (UI) dari aplikasi Bloom:
 | :---: | :---: | :---: |
 | ![Login](screenshots/login.jpg) | ![Home](screenshots/home.jpg) | ![Product](screenshots/profile.jpg) |
 
-| Keranjang (Cart) | Checkout & Order | Profil & Dark Mode |
+| Keranjang (Cart) | Checkout & Order | Profil |
 | :---: | :---: | :---: |
 | ![Cart](screenshots/cart.jpg) | ![Order](screenshots/order.jpg) | ![Wishlist](screenshots/wishlist.jpg) |
 
-*(Catatan: Anda bisa menyesuaikan ulang nama file `.jpg` di atas jika ada yang kurang tepat)*
 
 ---
 
@@ -65,22 +64,22 @@ Ikuti langkah-langkah di bawah ini untuk menjalankan *project* secara lokal di k
 ### 1. Clone Repository
 Buka terminal Anda dan ketikkan perintah berikut untuk mengunduh kode aplikasi:
 ```bash
-git clone https://github.com/aghniyaaj/tugasbesar_2306035.git
+git clone https://github.com/aghniyaaj/tugasbesar_2306035.git```
 
 ### 2. Masuk ke Folder Project
 Pindah ke direktori folder yang baru saja di-clone:
 ```bash
-cd tugasbesar_2306035
+cd tugasbesar_2306035```
 
 ### 3. Install Dependensi (Packages)
 Unduh dan sinkronkan semua packages flutter yang digunakan dalam aplikasi:
 ```bash
-flutter pub get
+flutter pub get```
 
 ### 4. Jalankan Aplikasi
 Pastikan Emulator Android atau smartphone Anda sudah terhubung (Debug mode), kemudian ketik:
 ```bash
-flutter run
+flutter run```
 
 ### Menjalankan Aplikasi Langsung
 Untuk menjalankan aplikasi langsung di perangkat mobile dapat mengunduh file apk pada folder release/app-release.apk atau melalui link drive https://bit.ly/4fpOXgu
