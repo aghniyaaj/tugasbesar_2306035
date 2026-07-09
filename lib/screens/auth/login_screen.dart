@@ -2,24 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../providers/auth_provider.dart';
+import '../../providers/wishlist_provider.dart';
 import '../../utils/constants.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_textfield.dart';
 import '../main_navigation.dart';
 import 'register_screen.dart';
 
+/// Kelas ini merupakan widget stateful untuk menampilkan halaman login
 class LoginScreen extends StatefulWidget {
+  /// Konstruktor untuk membuat instance [LoginScreen]
   const LoginScreen({Key? key}) : super(key: key);
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
+/// State untuk kelas [LoginScreen] yang menangani logika form login
 class _LoginScreenState extends State<LoginScreen> {
   // Controller untuk menangkap teks yang diinput user
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
+  /// Method untuk mengirim data login ke server
   Future<void> _submitLogin() async {
     // Validasi input kosong
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -39,6 +44,9 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (success) {
+      if (authProvider.user != null) {
+        Provider.of<WishlistProvider>(context, listen: false).loadWishlist(authProvider.user!.id);
+      }
       // Pindah ke halaman Home jika berhasil
       Navigator.pushReplacement(
         context,
@@ -56,6 +64,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
+  /// Method untuk membersihkan resource saat widget dihapus
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
@@ -63,6 +72,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   @override
+  /// Method untuk merender tampilan antarmuka halaman login
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,

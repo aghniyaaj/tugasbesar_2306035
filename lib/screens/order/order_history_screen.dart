@@ -8,14 +8,19 @@ import '../../utils/constants.dart';
 import '../../utils/formatters.dart';
 import 'order_detail_screen.dart'; 
 
+/// Kelas ini merupakan layar untuk menampilkan riwayat pesanan pengguna.
 class OrderHistoryScreen extends StatefulWidget {
+  /// Konstruktor untuk membuat [OrderHistoryScreen].
   const OrderHistoryScreen({Key? key}) : super(key: key);
 
+  /// Method untuk membuat state dari [OrderHistoryScreen].
   @override
   State<OrderHistoryScreen> createState() => _OrderHistoryScreenState();
 }
 
+/// State untuk [OrderHistoryScreen].
 class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
+  /// Method untuk inisialisasi state, memanggil provider untuk mengambil riwayat pesanan.
   @override
   void initState() {
     super.initState();
@@ -27,6 +32,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     });
   }
 
+  /// Method untuk mendapatkan warna berdasarkan status pesanan.
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending': return Colors.amber;
@@ -38,6 +44,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     }
   }
 
+  /// Method untuk membangun UI layar riwayat pesanan.
   @override
   Widget build(BuildContext context) {
     // DETEKSI TEMA
@@ -48,7 +55,7 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text('Order History', style: TextStyle(fontFamily: 'Serif', color: textColor)),
+        title: Text('Order History', style: TextStyle(fontFamily: 'Serif', color: textColor, fontWeight: .bold)),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -60,6 +67,26 @@ class _OrderHistoryScreenState extends State<OrderHistoryScreen> {
           }
           
           if (orderProvider.orders.isEmpty) {
+            if (orderProvider.errorMessage != null) {
+              final token = Provider.of<AuthProvider>(context, listen: false).token;
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
+                    const SizedBox(height: 16),
+                    Text(orderProvider.errorMessage!, style: const TextStyle(color: Colors.redAccent)),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => orderProvider.fetchOrders(token!),
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                      child: const Text('Coba Lagi', style: TextStyle(color: Colors.white)),
+                    )
+                  ],
+                ),
+              );
+            }
+
             return const Center(child: Text('Belum ada pesanan.', style: TextStyle(color: AppColors.textGrey)));
           }
 

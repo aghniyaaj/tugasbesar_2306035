@@ -1,15 +1,25 @@
-/// Model yang merepresentasikan data Produk
+/// Model yang merepresentasikan data Produk.
 class ProductModel {
+  /// ID unik produk.
   final String id;
+  /// Nama produk.
   final String name;
+  /// Deskripsi tentang produk.
   final String description;
+  /// Harga produk.
   final double price;
+  /// URL gambar produk.
   final String imageUrl;
+  /// Kategori produk.
   final String category;
+  /// Jumlah stok produk yang tersedia.
   final int stock;
+  /// Rating rata-rata produk.
   final double rating;
+  /// Jumlah ulasan pada produk.
   final int reviewCount;
 
+  /// Konstruktor untuk menginisialisasi objek [ProductModel].
   ProductModel({
     required this.id,
     required this.name,
@@ -22,6 +32,7 @@ class ProductModel {
     this.reviewCount = 0,
   });
 
+  /// Method factory untuk membuat objek [ProductModel] dari data JSON.
   factory ProductModel.fromJson(Map<String, dynamic> json) {
     // FITUR PERBAIKAN: Menangani kategori yang berbentuk objek nested (bersarang)
     String parsedCategory = 'Uncategorized';
@@ -51,14 +62,20 @@ class ProductModel {
   }
 }
 
-/// Model yang merepresentasikan data Ulasan (Review) pada Detail Produk
+/// Model yang merepresentasikan data Ulasan (Review) pada Detail Produk.
 class ReviewModel {
+  /// ID unik ulasan.
   final String id;
+  /// Nilai rating yang diberikan.
   final double rating;
+  /// Komentar atau isi ulasan.
   final String comment;
+  /// Nama pengguna yang memberikan ulasan.
   final String reviewerName;
+  /// Tanggal ulasan dibuat.
   final String createdAt;
 
+  /// Konstruktor untuk menginisialisasi objek [ReviewModel].
   ReviewModel({
     required this.id,
     required this.rating,
@@ -67,6 +84,7 @@ class ReviewModel {
     required this.createdAt,
   });
 
+  /// Method factory untuk membuat objek [ReviewModel] dari data JSON.
   factory ReviewModel.fromJson(Map<String, dynamic> json) {
     // Menangani nama reviewer yang biasanya ada di dalam objek 'reviewer'
     String parsedReviewerName = 'Anonymous';

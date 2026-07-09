@@ -4,6 +4,7 @@ import 'dart:convert';
 import '../models/product_model.dart';
 import '../utils/constants.dart';
 
+/// Kelas Provider untuk mengelola data produk dan kategori.
 class ProductProvider with ChangeNotifier {
   List<ProductModel> _products = [];
   List<String> _categories = [];
@@ -14,16 +15,29 @@ class ProductProvider with ChangeNotifier {
   String _currentSort = 'newest';
   int _currentLimit = 10; 
 
+  /// Mendapatkan daftar produk.
   List<ProductModel> get products => _products;
+  
+  /// Mendapatkan daftar kategori produk.
   List<String> get categories => _categories;
+  
+  /// Mengembalikan status apakah proses sedang memuat (loading).
   bool get isLoading => _isLoading;
+  
+  /// Mendapatkan pesan error jika terjadi kesalahan.
   String? get errorMessage => _errorMessage;
   
+  /// Mendapatkan kategori produk yang saat ini dipilih.
   String get currentCategory => _currentCategory;
+  
+  /// Mendapatkan jenis urutan (sort) yang saat ini diterapkan.
   String get currentSort => _currentSort;
+  
+  /// Mendapatkan batas (limit) jumlah produk yang dimuat.
   int get currentLimit => _currentLimit;
 
-  // --- MENGAMBIL DAFTAR PRODUK ---
+  /// Method untuk mengambil daftar produk dari server.
+  /// Dapat difilter menggunakan parameter [search], [category], [sort], dan [limit].
   Future<void> fetchProducts({String? search, String? category, String? sort, int? limit}) async {
     _isLoading = true;
     _errorMessage = null;
@@ -83,7 +97,7 @@ class ProductProvider with ChangeNotifier {
     }
   }
 
-  // --- MENGAMBIL DAFTAR KATEGORI ---
+  /// Method untuk mengambil daftar kategori produk dari server.
   Future<void> fetchCategories() async {
     try {
       final uri = Uri.parse('${ApiConstants.baseUrl}/categories');

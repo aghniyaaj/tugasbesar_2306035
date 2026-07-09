@@ -4,21 +4,27 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/product_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/wishlist_provider.dart';
 import '../../utils/constants.dart';
 import '../../utils/formatters.dart';
 import '../product/product_detail_screen.dart';
 
+/// Kelas ini merupakan widget stateful untuk menampilkan halaman beranda
 class HomeScreen extends StatefulWidget {
+  /// Callback yang dijalankan ketika profil ditekan
   final VoidCallback? onProfileTapped;
 
+  /// Konstruktor untuk membuat instance [HomeScreen]
   const HomeScreen({Key? key, this.onProfileTapped}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
+/// State untuk kelas [HomeScreen] yang menangani tampilan daftar produk dan kategori
 class _HomeScreenState extends State<HomeScreen> {
   @override
+  /// Method ini dipanggil saat widget pertama kali diinisialisasi
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -33,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  /// Method untuk merender tampilan antarmuka halaman beranda
   Widget build(BuildContext context) {
     final user = Provider.of<AuthProvider>(context).user;
     final productProvider = Provider.of<ProductProvider>(context);
@@ -49,7 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Good morning,', style: TextStyle(fontSize: 12, color: AppColors.textGrey)),
+            const Text('Welcome to Bloom,', style: TextStyle(fontSize: 12, color: AppColors.textGrey)),
             Text(
               user?.fullName.split(' ')[0] ?? 'User',
               style: TextStyle(fontSize: 20, color: textColor, fontWeight: FontWeight.bold, fontFamily: 'Serif'),
@@ -148,25 +155,49 @@ class _HomeScreenState extends State<HomeScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('${productProvider.products.length} items', style: const TextStyle(color: AppColors.textGrey)),
-                  PopupMenuButton<String>(
-                    child: Row(
-                      children: [
-                        Text('Sort by: ', style: TextStyle(color: textColor)),
-                        Text(
-                          productProvider.currentSort,
-                          style: TextStyle(fontWeight: FontWeight.bold, color: textColor),
-                        ),
-                        Icon(Icons.keyboard_arrow_down, color: textColor, size: 16),
-                      ],
+                  // Dropdown untuk Limit (Jumlah item yang ditampilkan)
+                  DropdownButtonHideUnderline(
+                    child: DropdownButton<int>(
+                      value: productProvider.currentLimit,
+                      dropdownColor: cardColor,
+                      icon: Icon(Icons.keyboard_arrow_down, color: textColor, size: 16),
+                      style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13),
+                      onChanged: (int? newValue) {
+                        if (newValue != null) {
+                          productProvider.fetchProducts(limit: newValue);
+                        }
+                      },
+                      items: [10, 15, 20].map((int value) {
+                        return DropdownMenuItem<int>(
+                          value: value,
+                          child: Text('$value items', style: TextStyle(color: textColor)),
+                        );
+                      }).toList(),
                     ),
-                    onSelected: (value) {
-                      productProvider.fetchProducts(sort: value);
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(value: 'newest', child: Text('Newest')),
-                      const PopupMenuItem(value: 'price_asc', child: Text('Lowest Price')),
-                      const PopupMenuItem(value: 'price_desc', child: Text('Highest Price')),
+                  ),
+
+                  // Dropdown untuk Sorting (Urutan)
+                  Row(
+                    children: [
+                      Text('Sort by: ', style: TextStyle(color: AppColors.textGrey, fontSize: 13)),
+                      DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: productProvider.currentSort,
+                          dropdownColor: cardColor,
+                          icon: Icon(Icons.keyboard_arrow_down, color: textColor, size: 16),
+                          style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 13),
+                          onChanged: (String? newValue) {
+                            if (newValue != null) {
+                              productProvider.fetchProducts(sort: newValue);
+                            }
+                          },
+                          items: const [
+                            DropdownMenuItem(value:'newest', child: Text('Newest')),
+                            DropdownMenuItem(value:'price_asc', child: Text('Lowest Price')),
+                            DropdownMenuItem(value:'price_desc', child: Text('Highest Price')),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -219,10 +250,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                   ),
                                   Positioned(
                                     top: 8, right: 8,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: const BoxDecoration(color: Colors.white70, shape: BoxShape.circle),
-                                      child: const Icon(Icons.favorite_border, color: AppColors.primary, size: 16),
+                                    child: Consumer<WishlistProvider>(
+                                      builder: (context, wishlistProvider, child) {
+                                        final isFav = wishlistProvider.isWishlisted(product.id);
+                                        return GestureDetector(
+                                          onTap: () => wishlistProvider.toggleWishlist(product),
+                                          child: Container(
+                                            padding: const EdgeInsets.all(4),
+                                            decoration: const BoxDecoration(color: Colors.white70, shape: BoxShape.circle),
+                                            child: Icon(
+                                              isFav ? Icons.favorite : Icons.favorite_border, 
+                                              color: isFav ? AppColors.primary : Colors.grey, 
+                                              size: 16
+                                            ),
+                                          ),
+                                        );
+                                      }
                                     ),
                                   )
                                 ],

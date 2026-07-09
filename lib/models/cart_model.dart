@@ -9,13 +9,13 @@ class CartModel {
   /// Total harga dari semua barang di keranjang (Grand Total)
   final double grandTotal;
 
-  /// Constructor inisialisasi CartModel
+  /// Konstruktor untuk inisialisasi [CartModel] dengan [items] dan [grandTotal].
   CartModel({
     required this.items,
     required this.grandTotal,
   });
 
-  /// Mengubah JSON dari API menjadi objek [CartModel]
+  /// Method factory untuk mengubah data JSON dari API menjadi objek [CartModel].
   factory CartModel.fromJson(Map<String, dynamic> json) {
     var itemsList = json['items'] as List? ?? [];
     List<CartItemModel> parsedItems = 
@@ -23,7 +23,7 @@ class CartModel {
 
     return CartModel(
       items: parsedItems,
-      grandTotal: (json['grandTotal'] ?? 0).toDouble(),
+      grandTotal: (json['grand_total'] ?? json['grandTotal'] ?? 0).toDouble(),
     );
   }
 }
@@ -42,6 +42,7 @@ class CartItemModel {
   /// Total harga untuk item ini (harga produk * kuantitas)
   final double subtotal;
 
+  /// Konstruktor untuk inisialisasi [CartItemModel].
   CartItemModel({
     required this.id,
     required this.product,
@@ -49,6 +50,7 @@ class CartItemModel {
     required this.subtotal,
   });
 
+  /// Method factory untuk mengubah data JSON dari API menjadi objek [CartItemModel].
   factory CartItemModel.fromJson(Map<String, dynamic> json) {
     return CartItemModel(
       id: json['id'] ?? '',

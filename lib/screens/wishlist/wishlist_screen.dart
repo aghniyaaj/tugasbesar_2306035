@@ -6,9 +6,12 @@ import '../../providers/wishlist_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../product/product_detail_screen.dart';
 
+/// Kelas ini merupakan layar untuk menampilkan daftar produk favorit pengguna.
 class WishlistScreen extends StatelessWidget {
+  /// Konstruktor untuk membuat [WishlistScreen].
   const WishlistScreen({Key? key}) : super(key: key);
 
+  /// Method untuk membangun UI layar daftar produk favorit.
   @override
   Widget build(BuildContext context) {
     // 1. DETEKSI TEMA

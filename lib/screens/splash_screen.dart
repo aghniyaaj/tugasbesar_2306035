@@ -3,21 +3,25 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 
 import '../providers/auth_provider.dart';
+import '../providers/wishlist_provider.dart';
 import '../utils/constants.dart';
 import 'auth/login_screen.dart';
 import 'main_navigation.dart';
 
 /// [SplashScreen] adalah layar pertama yang dilihat user saat membuka aplikasi.
 class SplashScreen extends StatefulWidget {
+  /// Konstruktor untuk membuat instance [SplashScreen]
   const SplashScreen({Key? key}) : super(key: key);
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
+/// State untuk kelas [SplashScreen] yang menangani logika pengecekan login
 class _SplashScreenState extends State<SplashScreen> {
   
   @override
+  /// Method ini dipanggil saat widget pertama kali diinisialisasi
   void initState() {
     super.initState();
     _checkLoginStatus();
@@ -37,6 +41,9 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
 
     if (isAuth) {
+      if (authProvider.user != null) {
+        Provider.of<WishlistProvider>(context, listen: false).loadWishlist(authProvider.user!.id);
+      }
       // Jika token ada dan valid, langsung ke Main Navigation (Home)
       Navigator.pushReplacement(
         context,
@@ -52,6 +59,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   @override
+  /// Method untuk merender tampilan antarmuka splash screen
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,

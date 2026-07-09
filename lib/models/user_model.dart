@@ -1,11 +1,19 @@
+/// Model yang merepresentasikan data pengguna (User).
 class UserModel {
+  /// ID unik dari pengguna.
   final String id;
+  /// Nama lengkap dari pengguna.
   final String fullName;
+  /// Alamat email dari pengguna.
   final String email;
+  /// Nomor telepon dari pengguna (opsional).
   final String? phoneNumber;
+  /// Peran (role) dari pengguna, misalnya 'customer'.
   final String role;
+  /// URL gambar profil pengguna (opsional).
   final String? avatarUrl; // TAMBAHAN: Menyimpan URL foto profil
 
+  /// Konstruktor untuk menginisialisasi objek [UserModel].
   UserModel({
     required this.id,
     required this.fullName,
@@ -15,6 +23,7 @@ class UserModel {
     this.avatarUrl,
   });
 
+  /// Method factory untuk membuat objek [UserModel] dari data JSON.
   factory UserModel.fromJson(Map<String, dynamic> json) {
     try {
       String parsedRole = 'customer';
@@ -45,6 +54,7 @@ class UserModel {
     }
   }
 
+  /// Method untuk mengubah objek [UserModel] menjadi bentuk JSON.
   Map<String, dynamic> toJson() {
     return {
       'id': id,

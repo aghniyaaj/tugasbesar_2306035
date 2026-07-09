@@ -9,26 +9,31 @@ import '../../widgets/custom_button.dart';
 import '../../widgets/custom_textfield.dart';
 import '../splash_screen.dart';
 
+/// Kelas ini merupakan layar untuk menampilkan profil pengguna dan pengaturannya.
 class ProfileScreen extends StatefulWidget {
   // Fungsi yang diterima dari Main Navigation untuk pindah antar tab
   final VoidCallback? onNavigateToWishlist;
   final VoidCallback? onNavigateToOrders;
 
+  /// Konstruktor untuk membuat [ProfileScreen].
   const ProfileScreen({
     Key? key, 
     this.onNavigateToWishlist, 
     this.onNavigateToOrders
   }) : super(key: key);
 
+  /// Method untuk membuat state dari [ProfileScreen].
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
+/// State untuk [ProfileScreen].
 class _ProfileScreenState extends State<ProfileScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _avatarController = TextEditingController();
 
+  /// Method untuk inisialisasi state dengan data pengguna.
   @override
   void initState() {
     super.initState();
@@ -40,6 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  /// Method untuk memproses logout pengguna.
   void _handleLogout() async {
     Provider.of<WishlistProvider>(context, listen: false).clearMemoryOnLogout();
     await Provider.of<AuthProvider>(context, listen: false).logout();
@@ -50,6 +56,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  /// Method untuk membangun UI layar profil.
   @override
   Widget build(BuildContext context) {
     final user = Provider.of<AuthProvider>(context).user;

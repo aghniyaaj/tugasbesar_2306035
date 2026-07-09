@@ -13,21 +13,26 @@ import '../../providers/theme_provider.dart';
 import '../../utils/constants.dart';
 import '../../utils/formatters.dart';
 
+/// Kelas ini merupakan layar untuk menampilkan detail sebuah produk.
 class ProductDetailScreen extends StatefulWidget {
   final String productId;
 
+  /// Konstruktor untuk membuat [ProductDetailScreen].
   const ProductDetailScreen({Key? key, required this.productId}) : super(key: key);
 
+  /// Method untuk membuat state dari [ProductDetailScreen].
   @override
   State<ProductDetailScreen> createState() => _ProductDetailScreenState();
 }
 
+/// State untuk [ProductDetailScreen].
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _ratingBintangInput = 5;
   final TextEditingController _commentController = TextEditingController();
   ProductModel? _localProductDetail;
   bool _isLoadingDetail = false;
 
+  /// Method untuk inisialisasi state, mengambil ulasan dan detail produk.
   @override
   void initState() {
     super.initState();
@@ -37,6 +42,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     });
   }
 
+  /// Method untuk memeriksa ketersediaan produk lokal atau mengambil detail produk dari server.
   Future<void> _checkAndFetchProductDetails() async {
     final productProvider = Provider.of<ProductProvider>(context, listen: false);
     try {
@@ -59,12 +65,14 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     }
   }
 
+  /// Method untuk membersihkan controller saat state dihapus.
   @override
   void dispose() {
     _commentController.dispose();
     super.dispose();
   }
 
+  /// Method untuk menampilkan bottom sheet form pengisian ulasan.
   void _showReviewBottomSheet(BuildContext context) {
     final isDark = Provider.of<ThemeProvider>(context, listen: false).isDarkMode;
     
@@ -112,11 +120,24 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   const SizedBox(height: 24),
                   ElevatedButton(
                     onPressed: () async {
-                      if (_commentController.text.trim().isEmpty) return;
+                      if (_commentController.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Komentar tidak boleh kosong!')));
+                        return;
+                      }
                       final token = Provider.of<AuthProvider>(context, listen: false).token;
-                      if (token == null) return;
+                      if (token == null) {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Harap login terlebih dahulu untuk mengirim ulasan!')));
+                        return;
+                      }
                       final success = await Provider.of<ReviewProvider>(context, listen: false).addReview(token, widget.productId, _ratingBintangInput.toDouble(), _commentController.text.trim());
-                      if (success) { if (mounted) Navigator.pop(context); _commentController.clear(); }
+                      if (!mounted) return;
+                      if (success) { 
+                        Navigator.pop(context); 
+                        _commentController.clear(); 
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ulasan berhasil dikirim!'), backgroundColor: Colors.green));
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal mengirim ulasan.'), backgroundColor: Colors.red));
+                      }
                     },
                     style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
                     child: const Text('KIRIM ULASAN', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
@@ -130,6 +151,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     );
   }
 
+  /// Method untuk membangun UI layar detail produk.
   @override
   Widget build(BuildContext context) {
     if (_isLoadingDetail) return Scaffold(backgroundColor: Theme.of(context).scaffoldBackgroundColor, body: const Center(child: CircularProgressIndicator(color: AppColors.primary)));
@@ -181,7 +203,15 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(child: Text(Formatters.formatRupiah(product.price), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor))),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(Formatters.formatRupiah(product.price), style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: textColor)),
+                            Text('Stok: ${product.stock}', style: const TextStyle(color: AppColors.textGrey, fontSize: 12)),
+                          ],
+                        ),
+                      ),
                       Consumer<ReviewProvider>(
                         builder: (context, reviewProvider, child) {
                           double displayRating = product.rating;
@@ -271,7 +301,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         decoration: BoxDecoration(color: cardColor, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, -5))]),
         child: SafeArea(
           child: ElevatedButton(
-            onPressed: () async {
+            onPressed: product.stock == 0 ? null : () async {
               final authProvider = Provider.of<AuthProvider>(context, listen: false);
               if (authProvider.token == null) {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Harap login terlebih dahulu!')));
@@ -287,8 +317,16 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gagal menambahkan ke keranjang.'), backgroundColor: Colors.red));
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))),
-            child: const Text('ADD TO CART', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary, 
+              disabledBackgroundColor: isDark ? Colors.grey.shade800 : Colors.grey.shade400,
+              padding: const EdgeInsets.symmetric(vertical: 16), 
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30))
+            ),
+            child: Text(
+              product.stock == 0 ? 'SOLD OUT' : 'ADD TO CART', 
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)
+            ),
           ),
         ),
       ),

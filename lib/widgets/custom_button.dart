@@ -3,12 +3,14 @@ import '../utils/constants.dart';
 
 /// [CustomButton] adalah widget tombol kustom yang desainnya disesuaikan 
 /// dengan palet warna "Bloom" (Orchid Pink).
+/// Kelas ini membuat tombol yang dapat berupa solid atau bergaris tepi (outlined).
 class CustomButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
   final bool isLoading;
   final bool isOutlined;
 
+  /// Konstruktor untuk membuat [CustomButton].
   const CustomButton({
     Key? key,
     required this.text,
@@ -17,6 +19,7 @@ class CustomButton extends StatelessWidget {
     this.isOutlined = false,
   }) : super(key: key);
 
+  /// Method untuk membangun UI tombol.
   @override
   Widget build(BuildContext context) {
     // Jika tombol berjenis outline (hanya garis pinggir)

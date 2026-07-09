@@ -1,10 +1,10 @@
 import 'package:intl/intl.dart';
 
-/// [Formatters] berisi fungsi-fungsi bantuan untuk mengubah format data 
+/// Kelas [Formatters] berisi fungsi-fungsi bantuan untuk mengubah format data 
 /// mentah menjadi format yang ramah dibaca oleh user (UI).
 class Formatters {
   
-  /// Fungsi untuk memformat angka double menjadi format Rupiah.
+  /// Method statis untuk memformat angka double menjadi format Rupiah.
   /// Contoh: 680000 menjadi "Rp 680.000"
   static String formatRupiah(double amount) {
     final currencyFormatter = NumberFormat.currency(
@@ -15,7 +15,7 @@ class Formatters {
     return currencyFormatter.format(amount);
   }
 
-  /// Fungsi untuk memformat string tanggal ISO dari API menjadi format rapi.
+  /// Method statis untuk memformat string tanggal ISO dari API menjadi format rapi.
   /// Contoh: "2025-06-28T10:00:00Z" menjadi "28 Jun 2025"
   static String formatDate(String dateString) {
     try {

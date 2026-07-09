@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/constants.dart';
 
+/// Kelas ini merupakan widget input teks kustom dengan berbagai fitur konfigurasi.
 class CustomTextField extends StatefulWidget {
   final TextEditingController controller;
   final String hintText;
@@ -12,6 +13,7 @@ class CustomTextField extends StatefulWidget {
   // FITUR BARU: Parameter untuk memaksa mode terang (Berguna untuk halaman Login/Register)
   final bool forceLightMode;
 
+  /// Konstruktor untuk membuat [CustomTextField].
   const CustomTextField({
     Key? key,
     required this.controller,
@@ -23,13 +25,16 @@ class CustomTextField extends StatefulWidget {
     this.forceLightMode = false, // Secara default tidak memaksa terang
   }) : super(key: key);
 
+  /// Method untuk membuat state dari [CustomTextField].
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
 }
 
+/// State untuk [CustomTextField].
 class _CustomTextFieldState extends State<CustomTextField> {
   bool _obscureText = true;
 
+  /// Method untuk membangun UI dari input teks kustom.
   @override
   Widget build(BuildContext context) {
     // Mengecek apakah aplikasi dalam mode gelap DAN tidak sedang dipaksa terang

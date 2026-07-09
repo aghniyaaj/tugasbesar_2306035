@@ -6,42 +6,60 @@ import '../../utils/constants.dart';
 import '../../widgets/custom_button.dart';
 import '../../widgets/custom_textfield.dart';
 
+/// Kelas ini merupakan widget stateful untuk menampilkan halaman registrasi
 class RegisterScreen extends StatefulWidget {
+  /// Konstruktor untuk membuat instance [RegisterScreen]
   const RegisterScreen({Key? key}) : super(key: key);
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
+/// State untuk kelas [RegisterScreen] yang menangani form pendaftaran pengguna
 class _RegisterScreenState extends State<RegisterScreen> {
   // Controller untuk input
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
+  /// Method untuk memvalidasi dan mengirim data registrasi ke server
   Future<void> _submitRegister() async {
     // Validasi: Apakah ada yang kosong?
-    if (_nameController.text.isEmpty || _emailController.text.isEmpty || _passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Semua form wajib diisi!')));
+    if (_nameController.text.isEmpty ||
+        _emailController.text.isEmpty ||
+        _passwordController.text.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Semua form wajib diisi!')));
       return;
     }
 
     // FITUR BARU: Validasi format email (Sesuai Soal UAS)
-    if (!_emailController.text.contains('@') || !_emailController.text.contains('.')) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Format email tidak valid (harus ada @ dan .)')));
+    if (!_emailController.text.contains('@') ||
+        !_emailController.text.contains('.')) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Format email tidak valid (harus ada @ dan .)'),
+        ),
+      );
       return;
     }
 
     // FITUR BARU: Validasi password minimal 6 karakter (Sesuai Soal UAS)
     if (_passwordController.text.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Password minimal 6 karakter!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Password minimal 6 karakter!')),
+      );
       return;
     }
-    
+
     // Validasi: Apakah password match?
     if (_passwordController.text != _confirmPasswordController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Konfirmasi password tidak cocok!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Konfirmasi password tidak cocok!')),
+      );
       return;
     }
 
@@ -56,18 +74,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registrasi berhasil! Silakan login.'), backgroundColor: Colors.green),
+        const SnackBar(
+          content: Text('Registrasi berhasil! Silakan login.'),
+          backgroundColor: Colors.green,
+        ),
       );
       // Kembali ke halaman Login
-      Navigator.pop(context); 
+      Navigator.pop(context);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authProvider.errorMessage ?? 'Gagal mendaftar.'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(authProvider.errorMessage ?? 'Gagal mendaftar.'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
 
   @override
+  /// Method untuk merender antarmuka halaman registrasi
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -101,7 +126,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
               const SizedBox(height: 32),
 
-              const Text('FULL NAME', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textGrey)),
+              const Text(
+                'FULL NAME',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textGrey,
+                ),
+              ),
               const SizedBox(height: 8),
               CustomTextField(
                 controller: _nameController,
@@ -110,8 +142,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 forceLightMode: true,
               ),
               const SizedBox(height: 16),
-              
-              const Text('EMAIL ADDRESS', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textGrey)),
+
+              const Text(
+                'EMAIL ADDRESS',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textGrey,
+                ),
+              ),
               const SizedBox(height: 8),
               CustomTextField(
                 controller: _emailController,
@@ -121,8 +160,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 forceLightMode: true,
               ),
               const SizedBox(height: 16),
-              
-              const Text('PASSWORD', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textGrey)),
+
+              const Text(
+                'PASSWORD',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textGrey,
+                ),
+              ),
               const SizedBox(height: 8),
               CustomTextField(
                 controller: _passwordController,
@@ -132,8 +178,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 forceLightMode: true,
               ),
               const SizedBox(height: 16),
-              
-              const Text('CONFIRM PASSWORD', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.textGrey)),
+
+              const Text(
+                'CONFIRM PASSWORD',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textGrey,
+                ),
+              ),
               const SizedBox(height: 8),
               CustomTextField(
                 controller: _confirmPasswordController,
@@ -153,17 +206,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   );
                 },
               ),
-              
+
               const SizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("Already have an account? ", style: TextStyle(color: AppColors.textGrey)),
+                  const Text(
+                    "Already have an account? ",
+                    style: TextStyle(color: AppColors.textGrey),
+                  ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: const Text(
                       'Sign In',
-                      style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.textDark),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark,
+                      ),
                     ),
                   ),
                 ],

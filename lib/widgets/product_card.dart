@@ -3,16 +3,19 @@ import '../models/product_model.dart';
 import '../utils/constants.dart';
 import '../utils/formatters.dart';
 
+/// Kelas ini merupakan widget kartu untuk menampilkan ringkasan produk.
 class ProductCard extends StatelessWidget {
   final ProductModel product;
   final VoidCallback onTap;
 
+  /// Konstruktor untuk membuat [ProductCard].
   const ProductCard({
     Key? key,
     required this.product,
     required this.onTap,
   }) : super(key: key);
 
+  /// Method untuk membangun UI kartu produk.
   @override
   Widget build(BuildContext context) {
     return GestureDetector(

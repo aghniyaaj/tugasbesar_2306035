@@ -9,15 +9,19 @@ import '../../utils/formatters.dart';
 import '../product/product_detail_screen.dart'; 
 import 'checkout_screen.dart';
 
+/// Kelas ini merupakan widget stateful untuk menampilkan halaman keranjang belanja
 class CartScreen extends StatefulWidget {
+  /// Konstruktor untuk membuat instance [CartScreen]
   const CartScreen({Key? key}) : super(key: key);
 
   @override
   State<CartScreen> createState() => _CartScreenState();
 }
 
+/// State untuk kelas [CartScreen] yang menangani data dan tampilan keranjang
 class _CartScreenState extends State<CartScreen> {
   @override
+  /// Method ini dipanggil saat widget pertama kali diinisialisasi
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -29,6 +33,7 @@ class _CartScreenState extends State<CartScreen> {
   }
 
   @override
+  /// Method untuk merender tampilan halaman keranjang belanja
   Widget build(BuildContext context) {
     final token = Provider.of<AuthProvider>(context, listen: false).token;
     
@@ -52,6 +57,25 @@ class _CartScreenState extends State<CartScreen> {
         builder: (context, cartProvider, child) {
           if (cartProvider.isLoading) return const Center(child: CircularProgressIndicator(color: AppColors.primary));
           if (cartProvider.itemCount == 0) {
+            if (cartProvider.errorMessage != null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.error_outline, size: 60, color: Colors.redAccent),
+                    const SizedBox(height: 16),
+                    Text(cartProvider.errorMessage!, style: const TextStyle(color: Colors.redAccent)),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => cartProvider.fetchCart(token!),
+                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),
+                      child: const Text('Coba Lagi', style: TextStyle(color: Colors.white)),
+                    )
+                  ],
+                ),
+              );
+            }
+
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -74,7 +98,6 @@ class _CartScreenState extends State<CartScreen> {
                   itemCount: cart.items.length,
                   itemBuilder: (context, index) {
                     final item = cart.items[index];
-                    final isSelected = cartProvider.selectedProductIds.contains(item.product.id);
                     final currentQty = cartProvider.getQuantity(item.product.id, item.quantity);
                     final subtotal = item.product.price * currentQty;
 
@@ -89,23 +112,6 @@ class _CartScreenState extends State<CartScreen> {
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // KOTAK CENTANG
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8.0, right: 8.0),
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: Checkbox(
-                                value: isSelected,
-                                activeColor: AppColors.primary,
-                                checkColor: Colors.white,
-                                side: BorderSide(color: isDark ? Colors.grey.shade600 : Colors.grey.shade400, width: 1.5),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                                onChanged: (_) => cartProvider.toggleSelection(item.product.id),
-                              ),
-                            ),
-                          ),
-                          
                           // GAMBAR PRODUK
                           GestureDetector(
                             onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProductDetailScreen(productId: item.product.id))),
@@ -205,7 +211,7 @@ class _CartScreenState extends State<CartScreen> {
                         ],
                       ),
                       ElevatedButton(
-                        onPressed: cartProvider.selectedProductIds.isEmpty 
+                        onPressed: cartProvider.itemCount == 0 
                             ? null 
                             : () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CheckoutScreen())),
                         style: ElevatedButton.styleFrom(

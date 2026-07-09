@@ -8,17 +8,23 @@ import '../../providers/theme_provider.dart';
 import '../../utils/constants.dart';
 import '../../utils/formatters.dart';
 
+/// Kelas ini merupakan widget layar untuk menampilkan detail dari sebuah pesanan.
 class OrderDetailScreen extends StatefulWidget {
   final String orderId;
+
+  /// Konstruktor untuk membuat [OrderDetailScreen].
   const OrderDetailScreen({Key? key, required this.orderId}) : super(key: key);
 
+  /// Method untuk membuat state dari [OrderDetailScreen].
   @override
   State<OrderDetailScreen> createState() => _OrderDetailScreenState();
 }
 
+/// State untuk [OrderDetailScreen].
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
   Future<OrderModel?>? _orderDetailsFuture;
 
+  /// Method untuk inisialisasi state, mengambil token dan memanggil provider untuk mendapatkan detail pesanan.
   @override
   void initState() {
     super.initState();
@@ -29,6 +35,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
+  /// Method untuk mendapatkan warna berdasarkan status pesanan.
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
       case 'pending': return Colors.amber;
@@ -40,6 +47,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     }
   }
 
+  /// Method untuk membangun UI layar detail pesanan.
   @override
   Widget build(BuildContext context) {
     // DETEKSI TEMA

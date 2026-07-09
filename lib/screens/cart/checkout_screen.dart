@@ -9,24 +9,29 @@ import '../../utils/constants.dart';
 import '../../utils/formatters.dart';
 import '../../widgets/custom_button.dart';
 
+/// Kelas ini merupakan widget stateful untuk menampilkan halaman checkout pesanan
 class CheckoutScreen extends StatefulWidget {
+  /// Konstruktor untuk membuat instance [CheckoutScreen]
   const CheckoutScreen({Key? key}) : super(key: key);
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
 }
 
+/// State untuk kelas [CheckoutScreen] yang menangani form dan logika checkout
 class _CheckoutScreenState extends State<CheckoutScreen> {
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _notesController = TextEditingController();
 
   @override
+  /// Method untuk membersihkan resource saat widget dihapus
   void dispose() {
     _addressController.dispose();
     _notesController.dispose();
     super.dispose();
   }
 
+  /// Method untuk mengirim data pesanan ke server
   void _submitOrder() async {
     if (_addressController.text.length < 10) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Alamat pengiriman minimal 10 karakter!')));
@@ -72,10 +77,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   @override
+  /// Method untuk merender tampilan antarmuka halaman checkout
   Widget build(BuildContext context) {
     final cartProvider = Provider.of<CartProvider>(context);
     final cart = cartProvider.cart;
-    final selectedItems = cart?.items.where((item) => cartProvider.selectedProductIds.contains(item.product.id)).toList() ?? [];
+    final selectedItems = cart?.items ?? [];
     
     // DETEKSI TEMA
     final isDark = Provider.of<ThemeProvider>(context).isDarkMode;
@@ -85,7 +91,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(
+      appBar: AppBar( 
         title: Text('Checkout', style: TextStyle(fontFamily: 'Serif', color: textColor)), 
         centerTitle: true,
         backgroundColor: Colors.transparent,

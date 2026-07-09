@@ -4,14 +4,18 @@ import 'dart:convert';
 import '../models/product_model.dart';
 import '../utils/constants.dart';
 
+/// Kelas Provider untuk mengelola data ulasan (review) produk.
 class ReviewProvider with ChangeNotifier {
   List<ReviewModel> _reviews = [];
   bool _isLoading = false;
 
+  /// Mendapatkan daftar ulasan.
   List<ReviewModel> get reviews => _reviews;
+  
+  /// Mengembalikan status apakah proses sedang memuat (loading).
   bool get isLoading => _isLoading;
 
-  // GET: Mengambil daftar ulasan
+  /// GET: Mengambil daftar ulasan untuk sebuah produk berdasarkan [productId].
   Future<void> fetchReviews(String productId) async {
     _isLoading = true;
     Future.microtask(() => notifyListeners());
@@ -40,7 +44,9 @@ class ReviewProvider with ChangeNotifier {
     }
   }
 
-  // POST: Menambahkan Ulasan Baru
+  /// POST: Menambahkan ulasan baru.
+  /// Memerlukan [token], [productId], [rating], dan [comment].
+  /// Mengembalikan nilai true jika berhasil, atau false jika gagal.
   Future<bool> addReview(String token, String productId, double rating, String comment) async {
     try {
       final url = Uri.parse('${ApiConstants.baseUrl}/reviews/product/$productId');
@@ -58,6 +64,7 @@ class ReviewProvider with ChangeNotifier {
         await fetchReviews(productId); // Segarkan daftar ulasan agar yang baru muncul
         return true;
       }
+      print("🚨 [ERROR ADD REVIEW API]: Status: ${response.statusCode}, Body: ${response.body}");
       return false;
     } catch (e) {
       print("🚨 [ERROR ADD REVIEW]: $e");
@@ -65,7 +72,9 @@ class ReviewProvider with ChangeNotifier {
     }
   }
 
-  // DELETE: Menghapus Ulasan (Milik Sendiri)
+  /// DELETE: Menghapus ulasan milik pengguna.
+  /// Memerlukan [token], ID ulasan [reviewId], dan ID produk [productId] untuk penyegaran data.
+  /// Mengembalikan nilai true jika berhasil dihapus, atau false jika gagal.
   Future<bool> deleteReview(String token, String reviewId, String productId) async {
     try {
       // Perhatikan URL-nya menggunakan ID Ulasan (reviewId), bukan Product ID

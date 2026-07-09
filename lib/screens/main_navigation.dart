@@ -8,16 +8,20 @@ import 'wishlist/wishlist_screen.dart';
 import 'order/order_history_screen.dart';
 import 'profile/profile_screen.dart';
 
+/// Kelas ini merupakan widget stateful untuk menampilkan navigasi utama
 class MainNavigation extends StatefulWidget {
+  /// Konstruktor untuk membuat instance [MainNavigation]
   const MainNavigation({Key? key}) : super(key: key);
 
   @override
   State<MainNavigation> createState() => _MainNavigationState();
 }
 
+/// State untuk kelas [MainNavigation] yang mengatur tab yang aktif
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
+  /// Method untuk mengubah indeks tab yang sedang aktif
   void _onItemTapped(int index) {
     setState(() {
       _currentIndex = index;
@@ -37,6 +41,7 @@ class _MainNavigationState extends State<MainNavigation> {
   ];
 
   @override
+  /// Method untuk merender tampilan navigasi bawah beserta konten tabnya
   Widget build(BuildContext context) {
     // Deteksi Tema
     final isDark = Provider.of<ThemeProvider>(context).isDarkMode;

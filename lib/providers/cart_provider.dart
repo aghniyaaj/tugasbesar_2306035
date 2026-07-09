@@ -4,34 +4,35 @@ import 'dart:convert';
 import '../models/cart_model.dart';
 import '../utils/constants.dart';
 
+/// Kelas Provider untuk mengelola status dan data keranjang belanja (cart).
 class CartProvider with ChangeNotifier {
   CartModel? _cart;
   bool _isLoading = false;
   String? _errorMessage;
 
-  // Set untuk menyimpan ID produk yang dicentang user
-  final Set<String> _selectedProductIds = {};
-
+  /// Mendapatkan model keranjang belanja saat ini.
   CartModel? get cart => _cart;
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
-  Set<String> get selectedProductIds => _selectedProductIds;
   
+  /// Mengembalikan status apakah proses sedang memuat (loading).
+  bool get isLoading => _isLoading;
+  
+  /// Mendapatkan pesan error jika terjadi kesalahan.
+  String? get errorMessage => _errorMessage;
+  
+  /// Mendapatkan jumlah total item (jenis produk) di dalam keranjang.
   int get itemCount => _cart?.items.length ?? 0;
 
-  // FITUR: Hitung Grand Total BERDASARKAN item yang dicentang saja
+  /// Method untuk menghitung total keseluruhan (grand total) dari semua item di keranjang.
   double get grandTotal {
     if (_cart == null) return 0.0;
     double total = 0.0;
     for (var item in _cart!.items) {
-      if (_selectedProductIds.contains(item.product.id)) {
-        total += (item.product.price * item.quantity);
-      }
+      total += (item.product.price * item.quantity);
     }
     return total;
   }
 
-  // --- MENGAMBIL DATA KERANJANG ---
+  /// Method untuk mengambil data keranjang dari server berdasarkan [token].
   Future<void> fetchCart(String token) async {
     _isLoading = true;
     notifyListeners();
@@ -41,18 +42,29 @@ class CartProvider with ChangeNotifier {
       final response = await http.get(url, headers: ApiConstants.getHeaders(token));
 
       if (response.statusCode == 200) {
+        print("🛒 [DEBUG CART] Response: ${response.body}");
         final responseData = json.decode(response.body);
         final data = responseData['data'] ?? responseData;
-        _cart = CartModel.fromJson(data);
-        
-        // Opsional: Otomatis centang semua barang saat keranjang di-load
-        if (_cart != null && _selectedProductIds.isEmpty) {
-          _selectedProductIds.addAll(_cart!.items.map((e) => e.product.id));
+        try {
+          // Handle jika API mengembalikan List (array kosong) langsung
+          if (data is List) {
+             _cart = CartModel(
+               items: data.map((i) => CartItemModel.fromJson(i as Map<String, dynamic>)).toList(),
+               grandTotal: 0.0
+             );
+          } else {
+             _cart = CartModel.fromJson(data);
+          }
+        } catch (parseError) {
+          print("🚨 [ERROR PARSING CART]: $parseError");
+          _errorMessage = 'Kesalahan format data: $parseError';
         }
       } else {
+        print("🚨 [ERROR CART API]: Status ${response.statusCode}, Body: ${response.body}");
         _errorMessage = 'Gagal memuat keranjang.';
       }
     } catch (e) {
+      print("🚨 [ERROR FETCH CART]: $e");
       _errorMessage = 'Kesalahan jaringan: $e';
     } finally {
       _isLoading = false;
@@ -60,7 +72,9 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  // --- FITUR BARU: ADD TO CART ---
+  /// Method untuk menambahkan produk ke dalam keranjang.
+  /// Memerlukan [token], [productId], dan jumlah [quantity].
+  /// Mengembalikan nilai true jika berhasil, atau false jika gagal.
   Future<bool> addToCart(String token, String productId, int quantity) async {
     _isLoading = true;
     notifyListeners();
@@ -78,6 +92,7 @@ class CartProvider with ChangeNotifier {
         await fetchCart(token);
         return true;
       } else {
+        print("🚨 [ERROR ADD TO CART API]: Status ${response.statusCode}, Body: ${response.body}");
         // Jika API error (misal 429), kita tetep coba fetchCart buat jaga-jaga
         await fetchCart(token);
         return false;
@@ -89,7 +104,8 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  // --- UPDATE QTY ---
+  /// Method untuk memperbarui jumlah item (quantity) dalam keranjang.
+  /// Jika [newQty] kurang dari 1, item akan dihapus dari keranjang.
   Future<void> updateCartItemQty(String token, String cartItemId, String productId, int newQty) async {
     if (newQty < 1) {
       // Jika qty dikurangi sampai 0, panggil fungsi hapus
@@ -127,11 +143,9 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  // --- REMOVE ITEM DARI CART ---
+  /// Method untuk menghapus sebuah item dari dalam keranjang berdasarkan ID-nya.
   Future<void> removeCartItem(String token, String cartItemId, String productId) async {
     try {
-      // Hapus centang dari daftar selection
-      _selectedProductIds.remove(productId);
       
       // Optimistic Update: Hapus dari UI sementara
       if (_cart != null) {
@@ -149,17 +163,10 @@ class CartProvider with ChangeNotifier {
     }
   }
 
-  // Fungsi utilitas untuk Centang/Hapus Centang
-  void toggleSelection(String productId) {
-    if (_selectedProductIds.contains(productId)) {
-      _selectedProductIds.remove(productId);
-    } else {
-      _selectedProductIds.add(productId);
-    }
-    notifyListeners();
-  }
 
-  // Mendapatkan quantity barang tertentu
+
+  /// Method untuk mendapatkan kuantitas (quantity) barang tertentu di keranjang.
+  /// Akan mengembalikan [fallbackQty] jika barang tidak ditemukan.
   int getQuantity(String productId, int fallbackQty) {
     if (_cart == null) return fallbackQty;
     try {

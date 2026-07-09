@@ -1,13 +1,21 @@
 /// Model yang merepresentasikan data riwayat pesanan (Order).
 class OrderModel {
+  /// ID dari pesanan.
   final String id;
+  /// Tanggal pesanan dibuat.
   final String orderDate;
+  /// Total harga dari pesanan.
   final double totalPrice;
+  /// Status dari pesanan (contoh: Pending, Completed).
   final String status;
+  /// Alamat pengiriman untuk pesanan ini.
   final String shippingAddress;
+  /// Catatan tambahan untuk pesanan.
   final String? notes;
+  /// Daftar item yang ada dalam pesanan.
   final List<OrderItemModel> items;
 
+  /// Konstruktor untuk menginisialisasi objek [OrderModel].
   OrderModel({
     required this.id,
     required this.orderDate,
@@ -26,6 +34,7 @@ class OrderModel {
     return id.toUpperCase();
   }
 
+  /// Method factory untuk membuat objek [OrderModel] dari data JSON.
   factory OrderModel.fromJson(Map<String, dynamic> json) {
     try {
       // Mendeteksi list item dengan berbagai kemungkinan nama
@@ -33,7 +42,7 @@ class OrderModel {
       if (itemsList is! List) itemsList = [];
       
       List<OrderItemModel> parsedItems = 
-          (itemsList as List).map((i) => OrderItemModel.fromJson(i)).toList();
+          (itemsList).map((i) => OrderItemModel.fromJson(i)).toList();
 
       return OrderModel(
         id: json['id']?.toString() ?? json['_id']?.toString() ?? 'UNKNOWN_ID',
@@ -52,12 +61,18 @@ class OrderModel {
   }
 }
 
+/// Model yang merepresentasikan item di dalam sebuah pesanan.
 class OrderItemModel {
+  /// Nama dari produk.
   final String productName;
+  /// Jumlah produk yang dipesan.
   final int quantity;
+  /// Harga satuan dari produk.
   final double unitPrice;
+  /// Subtotal harga (kuantitas * harga satuan).
   final double subtotal;
 
+  /// Konstruktor untuk menginisialisasi objek [OrderItemModel].
   OrderItemModel({
     required this.productName,
     required this.quantity,
@@ -65,6 +80,7 @@ class OrderItemModel {
     required this.subtotal,
   });
 
+  /// Method factory untuk membuat objek [OrderItemModel] dari data JSON.
   factory OrderItemModel.fromJson(Map<String, dynamic> json) {
     return OrderItemModel(
       productName: json['productName']?.toString() ?? json['product_name']?.toString() ?? json['product']?['name']?.toString() ?? json['name']?.toString() ?? 'Unknown Product',
