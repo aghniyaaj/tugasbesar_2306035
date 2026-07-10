@@ -52,7 +52,7 @@ Berikut adalah tampilan antarmuka (UI) dari aplikasi Bloom:
 
 | Keranjang (Cart) | Checkout / Order | Profil |
 | :---: | :---: | :---: |
-| ![Cart](screenshots/cart.jpg) | ![Order](screenshots/order.jpg) | ![Profile](screenshots/profile.jpg) |
+| ![Cart](screenshots/cart.jpg) | ![Checkout](screenshots/chekcout.png) ![Order](screenshots/order.jpg) | ![Profile](screenshots/profileDarl.jpg) |
 
 
 ---
